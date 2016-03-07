@@ -2,6 +2,8 @@
 
 ## Creating BLAST database
 
+> Run these commands in your working directory
+
 ```sh
 mkdir db
 wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions/uniprot_sprot_human.dat.gz -O db/uniprot_sprot_human.dat.gz
