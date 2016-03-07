@@ -36,6 +36,7 @@ options = parser.parse_args()
 # FUNCTIONS
 # ----------------------------------------------------
 
+# ----------------------------------------------------
 def run_blast(in_file, db):
     '''
     This function runs BLAST and prints FASTA files with orthologs
@@ -53,16 +54,38 @@ def run_blast(in_file, db):
 
     stdout, stderr = blastp_cmd()
 
+    # GET SEQUENCE DICTIONARIES
+    query_dict  = fasta_to_dict(in_file)
+    target_dict = fasta_to_dict(db + ".fa")
+
     # PARSE OUTPUT
     result_handle = open("tmp/blast_output.xml")
     blast_records = NCBIXML.parse(result_handle)
 
+    i = 1
     for blast_record in blast_records:
-        print(blast_record.query_letters)
-        for alignment in blast_record.alignments:
-            print ("TITLE: %s\n" % alignment.title)
+        out = open("tmp/" + str(i) + ".fa", "w")
+        query_seq = query_dict[blast_record.query]
+        out.write(">" + blast_record.query + "\n" + query_seq + "\n")
+
+        for alignment in blast_record.alignments[0:10]:
+            target_seq = target_dict[alignment.hit_def]
+            best_eval = alignment.hsps[0].expect
+            out.write(">" + alignment.hit_def + "\n" + target_seq + "\n")
             for hsp in alignment.hsps:
-                print("q: %s t: %s eval: %s\n" % (hsp.query, hsp.sbjct, hsp.expect))
+                if hsp.expect <= best_eval:
+                    best_eval = hsp.expect
+            print(best_eval)
+
+
+# ----------------------------------------------------
+def fasta_to_dict(fasta):
+    handle      = open(fasta, "rU")
+    record_dict = dict()
+    for record in SeqIO.parse(handle, "fasta"):
+        record_dict[record.description] = str(record.seq)
+    handle.close()
+    return record_dict
 
 
 # ----------------------------------------------------
