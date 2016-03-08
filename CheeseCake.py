@@ -2,16 +2,17 @@
 # MODULES
 # ----------------------------------------------------
 
-from Bio import SeqIO
 import argparse
 import os
 import sys
 import socket
 import time
-from Bio.Blast.Applications import NcbiblastpCommandline as Blastp
+from Bio import SeqIO
+from Bio import AlignIO
 from Bio.Blast import NCBIXML
 from Bio.Phylo.TreeConstruction import DistanceCalculator
-from Bio import AlignIO
+from Bio.Blast.Applications import NcbiblastpCommandline as Blastp
+from Bio.Align.Applications import TCoffeeCommandline     as tcoffee
 
 
 
@@ -141,10 +142,24 @@ def create_directories():
 
 
 # ----------------------------------------------------
-def do_msa(fasta):
+def do_msa():
     '''
     Creates a MSA with all the sequences in the fasta file
     '''
+    all_files = os.listdir(path="tmp")
+    all_files = [ file for file in all_files if file[-2:] == "fa"]
+
+    for fasta in all_files:
+        tcoffee_cmd = tcoffee(
+            infile  = "tmp/" + fasta,
+            output  = "clustalw",
+            outfile = "tmp/" + fasta + ".aln",
+        )
+        stdout, stderr = tcoffee_cmd()
+
+
+
+
 
 # ----------------------------------------------------
 # MAIN
@@ -159,7 +174,5 @@ run_blast(options.input, options.database, options.verbose)
 
 
 
-first = open("tmp/1.fa", "r")
-do_msa(first)
-second = open("tmp/2.fa", "r")
-do_msa(second)
+
+do_msa()
