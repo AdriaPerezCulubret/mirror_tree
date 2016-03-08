@@ -7,6 +7,7 @@ import os
 import sys
 import pprint
 import socket
+import itertools
 import time
 import re
 from Bio import SeqIO
@@ -84,7 +85,7 @@ def run_blast(in_file, db, verbose, query_dict):
     blastp_cmd = Blastp(
         query    = in_file,
         db       = db,
-        evalue   = 0.001,
+        evalue   = "1e-100",
         outfmt   = 5,
         out      = "tmp/blast_output.xml"
     )
@@ -101,13 +102,23 @@ def run_blast(in_file, db, verbose, query_dict):
 
     i = 1
     for blast_record in blast_records:
-        out = open("tmp/" + str(i) + ".fa", "w")
-        out.write(">" + blast_record.query + "\n" + str(query_dict[blast_record.query].seq) + "\n")
+        out = open("tmp/" + str(i) + ".fa", "a")
+        SeqIO.write(query_dict[blast_record.query], out, "fasta")
 
-        for alignment in blast_record.alignments[0:10]:
-            best_eval = alignment.hsps[0].expect
-            out.write(">" + alignment.hit_def + "\n" + str(target_dict[alignment.hit_def].seq) + "\n")
+        for alignment in blast_record.alignments:
+            t_species = target_dict[alignment.hit_def].species
 
+            # Add species homologs
+            query_dict[blast_record.query].homolog_sp.add(t_species)
+
+            # Add homolog ids with their species
+            query_dict[blast_record.query].homologs[t_species] = target_dict[alignment.hit_def].description
+
+            # Write to FASTA
+            SeqIO.write(target_dict[alignment.hit_def], out, "fasta")
+        i += 1
+
+    return query_dict
 
 # ----------------------------------------------------
 def get_species(description):
@@ -175,7 +186,10 @@ def do_msa(verbose):
     all_files = os.listdir(path="tmp")
     all_files = [ file for file in all_files if file[-2:] == "fa"]
 
+
     for fasta in all_files:
+        if verbose:
+            sys.stderr.write("# MSA for %s\n" % fasta)
         tcoffee_cmd = tcoffee(
             infile  = "tmp/" + fasta,
             output  = "clustalw",
@@ -184,6 +198,7 @@ def do_msa(verbose):
         stdout, stderr = tcoffee_cmd()
         if verbose:
             sys.stderr.write("# MSA complete for %s ... ok\n\n" % fasta)
+    return
 
 # ----------------------------------------------------
 def do_filter():
@@ -195,20 +210,38 @@ def do_filter():
     '''
     all_files = os.listdir(path="tmp")
     all_files = [ file for file in all_files if file[-2:] == "aln"]
+    return
 
+# ----------------------------------------------------
+def share_homolog_sp(seq1, seq2, k):
+    '''
+    Checks if two  objects
+    '''
+    pass
 
 
 # ----------------------------------------------------
 # MAIN
 # ----------------------------------------------------
 
+# STARTING PROGRAM
 if options.verbose:
     print_start_rep()
-
 create_directories()
 
+# READ PROBLEM SEQUENCES
 query_dict  = fasta_to_dict(options.input, options.verbose)
-run_blast(options.input, options.database, options.verbose, query_dict)
-do_msa(options.verbose)
 
-do_filter()
+# RUN BLAST
+query_dict = run_blast(options.input, options.database, options.verbose, query_dict)
+
+# PREDICT INTERACTIONS
+for seq in itertools.combinations(query_dict.keys(), 2):
+    seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
+
+    # Now we should run the MSA for each A and B proteins
+    # that share at least k species
+    if share_homolog_sp(seq1, seq2, 4):
+        print("They share at least 4 species!\n")
+
+# REMEMBER TO REMOVE ALL THE TMP FILES!!!
