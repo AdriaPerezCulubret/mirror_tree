@@ -117,14 +117,14 @@ def fasta_to_dict(fasta, verbose):
     handle      = open(fasta, "rU")
     record_dict = dict()
     if verbose:
-        sys.stderr.write("#  Reading FASTA file %s\n" % fasta)
+        sys.stderr.write("# Reading FASTA file %s\n" % fasta)
 
     for record in SeqIO.parse(handle, "fasta"):
         record_dict[record.description] = str(record.seq)
     handle.close()
 
     if verbose:
-        sys.stderr.write("#  Reading FASTA file %s ... ok\n\n" % fasta)
+        sys.stderr.write("# Reading FASTA file %s ... ok\n\n" % fasta)
     return record_dict
 
 # ----------------------------------------------------
