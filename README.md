@@ -6,7 +6,7 @@
 
 ```sh
 mkdir db
-wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions/uniprot_sprot_human.dat.gz -O db/uniprot_sprot_human.dat.gz
+wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
 cd db/
 tar -zxvf uniprot_sprot_human.dat.gz
 cd ..
