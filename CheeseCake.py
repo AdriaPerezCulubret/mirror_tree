@@ -65,14 +65,13 @@ def print_start_rep():
 """ %(HOSTNAME, time.ctime()))
 
 # ----------------------------------------------------
-def run_blast(in_file, db, verbose):
+def run_blast(in_file, db, verbose, query_dict):
     '''
     This function runs BLAST and prints FASTA files with orthologs
     for each input protein.
     '''
 
     # GET SEQUENCE DICTIONARIES
-    query_dict  = fasta_to_dict(in_file, verbose)
     target_dict = fasta_to_dict(db + ".fa", verbose)
 
     # RUN BLAST
@@ -170,8 +169,21 @@ if options.verbose:
 
 create_directories()
 
-run_blast(options.input, options.database, options.verbose)
+query_dict  = fasta_to_dict(options.input, options.verbose)
+
+run_blast(options.input, options.database, options.verbose, query_dict)
 
 
 
 do_msa()
+
+
+
+#for seq in fasta:
+#	for seq2 in fasta:
+#		if seq == seq2:
+#			continue
+#		continue
+#		if not condition 11:
+#			continue
+#
