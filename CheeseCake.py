@@ -4,8 +4,13 @@
 
 from Bio import SeqIO
 import argparse
+import os
+import sys
+import socket
+import time
 from Bio.Blast.Applications import NcbiblastpCommandline as Blastp
 from Bio.Blast import NCBIXML
+
 
 # ----------------------------------------------------
 # OPTIONS
@@ -28,6 +33,14 @@ parser.add_argument(
     required=True,
     help="Database for BLAST."
 )
+parser.add_argument(
+    "-v", "--verbose",
+    dest="verbose",
+    action="store_true",
+    default=False,
+    help="Prints log to STDERR."
+)
+
 
 options = parser.parse_args()
 
@@ -36,14 +49,31 @@ options = parser.parse_args()
 # FUNCTIONS
 # ----------------------------------------------------
 
+def print_start_rep():
+    HOSTNAME = socket.gethostname()
+    sys.stderr.write("""
+# ------------------------------------------
+#                  CheeseCake
+#                  host: %s
+#            start time: %s
+# ------------------------------------------
+
+""" %(HOSTNAME, time.ctime()))
+
 # ----------------------------------------------------
-def run_blast(in_file, db):
+def run_blast(in_file, db, verbose):
     '''
     This function runs BLAST and prints FASTA files with orthologs
     for each input protein.
     '''
 
+    # GET SEQUENCE DICTIONARIES
+    query_dict  = fasta_to_dict(in_file, verbose)
+    target_dict = fasta_to_dict(db + ".fa", verbose)
+
     # RUN BLAST
+    if verbose:
+        sys.stderr.write("# Running NCBI-BLASTp\n")
     blastp_cmd = Blastp(
         query    = in_file,
         db       = db,
@@ -54,9 +84,9 @@ def run_blast(in_file, db):
 
     stdout, stderr = blastp_cmd()
 
-    # GET SEQUENCE DICTIONARIES
-    query_dict  = fasta_to_dict(in_file)
-    target_dict = fasta_to_dict(db + ".fa")
+    if verbose:
+        sys.stderr.write("# NCBI-BLASTp... ok\n\n")
+
 
     # PARSE OUTPUT
     result_handle = open("tmp/blast_output.xml")
@@ -79,16 +109,22 @@ def run_blast(in_file, db):
 
 
 # ----------------------------------------------------
-def fasta_to_dict(fasta):
+def fasta_to_dict(fasta, verbose):
     '''
     Creates a dictionary with the FASTA headers as keys and their
     sequences as values.
     '''
     handle      = open(fasta, "rU")
     record_dict = dict()
+    if verbose:
+        sys.stderr.write("#  Reading FASTA file %s\n" % fasta)
+
     for record in SeqIO.parse(handle, "fasta"):
         record_dict[record.description] = str(record.seq)
     handle.close()
+
+    if verbose:
+        sys.stderr.write("#  Reading FASTA file %s ... ok\n\n" % fasta)
     return record_dict
 
 # ----------------------------------------------------
@@ -100,9 +136,13 @@ def create_directories():
     if not os.path.isdir(mypath):
         os.makedirs(mypath)
 
+
 # ----------------------------------------------------
 # MAIN
 # ----------------------------------------------------
 
+if options.verbose:
+    print_start_rep()
+
 create_directories()
-run_blast(options.input, options.database)
+run_blast(options.input, options.database, options.verbose)
