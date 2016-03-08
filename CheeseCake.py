@@ -155,8 +155,19 @@ def do_msa():
             outfile = "tmp/" + fasta + ".aln",
         )
         stdout, stderr = tcoffee_cmd()
+    	if verbose:
+        	sys.stderr.write("# MSA complete for %s ... ok\n\n" % fasta)
 
-
+# ----------------------------------------------------
+def do_filter():
+    '''
+    Filter the MSA:
+    	- No paralogous sequences
+    	- At least 4 sequences from different organisms for each query protein
+    	- The organisms must be coincident from all proteins 
+    '''
+    all_files = os.listdir(path="tmp")
+    all_files = [ file for file in all_files if file[-2:] == "aln"]
 
 
 
@@ -173,10 +184,9 @@ query_dict  = fasta_to_dict(options.input, options.verbose)
 
 run_blast(options.input, options.database, options.verbose, query_dict)
 
-
-
 do_msa()
 
+do_filter()
 
 
 #for seq in fasta:
