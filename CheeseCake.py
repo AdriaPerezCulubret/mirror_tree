@@ -80,6 +80,10 @@ def run_blast(in_file, db):
 
 # ----------------------------------------------------
 def fasta_to_dict(fasta):
+    '''
+    Creates a dictionary with the FASTA headers as keys and their
+    sequences as values.
+    '''
     handle      = open(fasta, "rU")
     record_dict = dict()
     for record in SeqIO.parse(handle, "fasta"):
@@ -87,9 +91,18 @@ def fasta_to_dict(fasta):
     handle.close()
     return record_dict
 
+# ----------------------------------------------------
+def create_directories():
+    '''
+    Creates all the directories used by the program
+    '''
+    mypath = "tmp"
+    if not os.path.isdir(mypath):
+        os.makedirs(mypath)
 
 # ----------------------------------------------------
 # MAIN
 # ----------------------------------------------------
 
+create_directories()
 run_blast(options.input, options.database)
