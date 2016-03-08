@@ -161,5 +161,3 @@ run_blast(options.input, options.database, options.verbose)
 
 first = open("tmp/1.fa", "r")
 do_msa(first)
-second = open("tmp/2.fa", "r")
-do_msa(second)
