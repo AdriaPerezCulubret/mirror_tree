@@ -141,7 +141,7 @@ def create_directories():
 
 
 # ----------------------------------------------------
-def do_msa():
+def do_msa(verbose):
     '''
     Creates a MSA with all the sequences in the fasta file
     '''
@@ -155,16 +155,16 @@ def do_msa():
             outfile = "tmp/" + fasta + ".aln",
         )
         stdout, stderr = tcoffee_cmd()
-    	if verbose:
-        	sys.stderr.write("# MSA complete for %s ... ok\n\n" % fasta)
+        if verbose:
+            sys.stderr.write("# MSA complete for %s ... ok\n\n" % fasta)
 
 # ----------------------------------------------------
 def do_filter():
     '''
     Filter the MSA:
-    	- No paralogous sequences
-    	- At least 4 sequences from different organisms for each query protein
-    	- The organisms must be coincident from all proteins 
+        - No paralogous sequences
+        - At least 4 sequences from different organisms for each query protein
+        - The organisms must be coincident from all proteins 
     '''
     all_files = os.listdir(path="tmp")
     all_files = [ file for file in all_files if file[-2:] == "aln"]
@@ -184,16 +184,16 @@ query_dict  = fasta_to_dict(options.input, options.verbose)
 
 run_blast(options.input, options.database, options.verbose, query_dict)
 
-do_msa()
+do_msa(options.verbose)
 
 do_filter()
 
 
 #for seq in fasta:
-#	for seq2 in fasta:
-#		if seq == seq2:
-#			continue
-#		continue
-#		if not condition 11:
-#			continue
+#   for seq2 in fasta:
+#       if seq == seq2:
+#           continue
+#       continue
+#       if not condition 11:
+#           continue
 #
