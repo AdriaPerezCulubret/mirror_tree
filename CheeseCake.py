@@ -5,9 +5,13 @@
 import argparse
 import os
 import sys
+import pprint
 import socket
 import time
+import re
 from Bio import SeqIO
+import BiopythonImproved
+from Bio.Seq import Seq
 from Bio import AlignIO
 from Bio.Blast import NCBIXML
 from Bio.Phylo.TreeConstruction import DistanceCalculator
@@ -99,32 +103,55 @@ def run_blast(in_file, db, verbose):
     i = 1
     for blast_record in blast_records:
         out = open("tmp/" + str(i) + ".fa", "w")
-        query_seq = query_dict[blast_record.query]
-        out.write(">" + blast_record.query + "\n" + query_seq + "\n")
+        out.write(">" + blast_record.query + "\n" + str(query_dict[blast_record.query].seq) + "\n")
 
         for alignment in blast_record.alignments[0:10]:
-            target_seq = target_dict[alignment.hit_def]
             best_eval = alignment.hsps[0].expect
-            out.write(">" + alignment.hit_def + "\n" + target_seq + "\n")
-            for hsp in alignment.hsps:
-                if hsp.expect <= best_eval:
-                    best_eval = hsp.expect
-            print(best_eval)
+            out.write(">" + alignment.hit_def + "\n" + str(target_dict[alignment.hit_def].seq) + "\n")
 
+
+# ----------------------------------------------------
+def get_species(description):
+    '''
+    Gets the species from a sequence header
+    '''
+    p = re.compile('OS=(.*?)\s?(\(.+\))?\s?[\w\d]*?\s*=')
+    species = None
+
+    try:
+        species = p.search(description).groups()[0]
+    except:
+        species = None
+
+    return species
 
 # ----------------------------------------------------
 def fasta_to_dict(fasta, verbose):
     '''
-    Creates a dictionary with the FASTA headers as keys and their
-    sequences as values.
+    Creates a dictionary with sequence objects. Keys = FASTA header
     '''
     handle      = open(fasta, "rU")
     record_dict = dict()
     if verbose:
         sys.stderr.write("# Reading FASTA file %s\n" % fasta)
 
-    for record in SeqIO.parse(handle, "fasta"):
-        record_dict[record.description] = str(record.seq)
+    record_dict = dict()
+
+    # Let's create a dictionary using SeqRecordOrg
+    for record in SeqIO.parse(handle, "fasta") :
+        obj = BiopythonImproved.SeqRecordOrg(
+            identifier  = str(record.id),
+            seq         = record.seq,
+            name        = record.name,
+            description = record.description,
+            dbxrefs     = record.features,
+            features    = None,
+            annotations = None,
+            species     = get_species(record.description),
+            letter_annotations = None,
+        )
+        record_dict[record.description] = obj
+
     handle.close()
 
     if verbose:
@@ -171,7 +198,4 @@ if options.verbose:
 create_directories()
 
 run_blast(options.input, options.database, options.verbose)
-
-
-
 do_msa()
