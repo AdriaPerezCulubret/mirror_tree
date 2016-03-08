@@ -69,14 +69,13 @@ def print_start_rep():
 """ %(HOSTNAME, time.ctime()))
 
 # ----------------------------------------------------
-def run_blast(in_file, db, verbose):
+def run_blast(in_file, db, verbose, query_dict):
     '''
     This function runs BLAST and prints FASTA files with orthologs
     for each input protein.
     '''
 
     # GET SEQUENCE DICTIONARIES
-    query_dict  = fasta_to_dict(in_file, verbose)
     target_dict = fasta_to_dict(db + ".fa", verbose)
 
     # RUN BLAST
@@ -169,7 +168,7 @@ def create_directories():
 
 
 # ----------------------------------------------------
-def do_msa():
+def do_msa(verbose):
     '''
     Creates a MSA with all the sequences in the fasta file
     '''
@@ -183,8 +182,19 @@ def do_msa():
             outfile = "tmp/" + fasta + ".aln",
         )
         stdout, stderr = tcoffee_cmd()
+        if verbose:
+            sys.stderr.write("# MSA complete for %s ... ok\n\n" % fasta)
 
-
+# ----------------------------------------------------
+def do_filter():
+    '''
+    Filter the MSA:
+        - No paralogous sequences
+        - At least 4 sequences from different organisms for each query protein
+        - The organisms must be coincident from all proteins
+    '''
+    all_files = os.listdir(path="tmp")
+    all_files = [ file for file in all_files if file[-2:] == "aln"]
 
 
 
@@ -197,5 +207,8 @@ if options.verbose:
 
 create_directories()
 
-run_blast(options.input, options.database, options.verbose)
-do_msa()
+query_dict  = fasta_to_dict(options.input, options.verbose)
+run_blast(options.input, options.database, options.verbose, query_dict)
+do_msa(options.verbose)
+
+do_filter()
