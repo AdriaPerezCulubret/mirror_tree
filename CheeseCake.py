@@ -6,6 +6,9 @@ from Bio import SeqIO
 import argparse
 from Bio.Blast.Applications import NcbiblastpCommandline as Blastp
 from Bio.Blast import NCBIXML
+from Bio.Phylo.TreeConstruction import DistanceCalculator
+from Bio import AlignIO
+
 
 # ----------------------------------------------------
 # OPTIONS
@@ -101,8 +104,21 @@ def create_directories():
         os.makedirs(mypath)
 
 # ----------------------------------------------------
+def do_msa(fasta):
+    '''
+    Creates a MSA with all the sequences in the fasta file
+    '''
+
+# ----------------------------------------------------
 # MAIN
 # ----------------------------------------------------
 
 create_directories()
+
 run_blast(options.input, options.database)
+
+
+first = open("tmp/1.fa", "r")
+do_msa(first)
+second = open("tmp/2.fa", "r")
+do_msa(second)
