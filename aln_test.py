@@ -18,6 +18,7 @@ calculator = DistanceCalculator('blosum62')
 dist_matrix = calculator.get_distance(aln)
 
 
+i=0
 j=0
 da_list = list()
 for row in dist_matrix:
