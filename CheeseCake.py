@@ -270,10 +270,15 @@ query_dict = run_blast(options.input, options.database, options.verbose, query_d
 i = 1
 for seq in itertools.combinations(query_dict.keys(), 2):
     seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
-
+    if options.verbose:
+        sys.stderr.write("# Trying to analyze %s and %s...\n" %(seq1.id, seq2.id))
     # Now we should run the MSA for each A and B proteins
     # that share at least k species
     common_sp = share_homolog_sp(seq1, seq2, options.species)
+    if common_sp is None:
+        if options.verbose:
+            sys.stderr.write("# They don't have the necessary common species\n\n")
+        continue
     if len(common_sp) >= options.species:
         file_1 = "tmp/%s_1MSA.fa"  % i
         file_2 = "tmp/%s_2MSA.fa"  % i
@@ -296,12 +301,12 @@ for seq in itertools.combinations(query_dict.keys(), 2):
         interaction.set_dist_matrix(1, file_1 + ".aln")
         interaction.set_dist_matrix(2, file_2 + ".aln")
         i += 1
-        print(seq1.id)
-        print(seq2.id)
-        print(str(interaction.get_corr()))
-        print("\n-----\n")
+        sys.stderr.write(seq1.id+"\n")
+        sys.stderr.write(seq2.id+"\n")
+        sys.stderr.write(str(interaction.get_corr())+"\n")
+        sys.stderr.write("\n-----\n")
 
 
 # REMEMBER TO REMOVE ALL THE TMP FILES!!!
 
-#erase_temp(options.verbose)
+erase_temp(options.verbose)
