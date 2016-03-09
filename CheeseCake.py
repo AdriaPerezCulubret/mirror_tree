@@ -5,7 +5,6 @@
 import argparse
 import os
 import sys
-import glob
 import pprint
 import socket
 import itertools
@@ -238,12 +237,7 @@ def print_seqs_MSA(seqobj, filename, common_sp):
 
     return
 
-# ----------------------------------------------------
-def erase_temp():
-    files = glob.glob('tmp/*')
-    for f in files:
-        os.remove(f)
-    print ('tmp erased!')
+
 # ----------------------------------------------------
 # MAIN
 # ----------------------------------------------------
@@ -266,7 +260,7 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 
     # Now we should run the MSA for each A and B proteins
     # that share at least k species
-    common_sp = share_homolog_sp(seq1, seq2, 4)
+    common_sp = share_homolog_sp(seq1, seq2, options.species)
     if len(common_sp) >= options.species:
         file_1 = "tmp/%s_1MSA.fa" % i
         file_2 = "tmp/%s_2MSA.fa"  % i
@@ -280,5 +274,3 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 
 
 # REMEMBER TO REMOVE ALL THE TMP FILES!!!
-
-erase_temp()
