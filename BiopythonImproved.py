@@ -16,4 +16,6 @@ class SeqRecordOrg(SeqIO.SeqRecord):
             annotations = annotations,
             letter_annotations = letter_annotations
         )
-        self.species = species
+        self.species    = species
+        self.homolog_sp = set()
+        self.homologs   = dict()
