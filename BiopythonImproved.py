@@ -6,7 +6,10 @@ import numpy as np
 
 class SequenceObj(SeqIO.SeqRecord):
     '''
-    This is a SeqRecord child class with species information
+    This is a SeqRecord child class with species information.
+        species    : The species of the sequence
+        homologs   : Dictionary with SequenceObj objects
+        homolog_sp : Set with the species of all the homologs of this Sequence
     '''
     def __init__(self, identifier, seq, name, species, description, dbxrefs, features, annotations, letter_annotations):
         super(SequenceObj, self).__init__(
@@ -19,9 +22,21 @@ class SequenceObj(SeqIO.SeqRecord):
             annotations = annotations,
             letter_annotations = letter_annotations
         )
-        self.species    = species
-        self.homolog_sp = set()
-        self.homologs   = dict()
+        self.species      = species
+        self.homologs     = dict()
+        self.__homolog_sp = None
+
+    def get_homolog_species(self):
+        '''
+        This returns a set with the species of all the homologs of this progein
+        '''
+        if self.__homolog_sp is None:
+            self.__homolog_sp = set()
+            for homo_name, homo_seq in self.homologs.items():
+                self.__homolog_sp.add(homo_seq.species)
+            return self.__homolog_sp
+        else:
+            return self.__homolog_sp
 
 class Interaction(object):
     '''
@@ -65,3 +80,4 @@ class Interaction(object):
             return self.correlation
         else: 
             return self.correlation
+
