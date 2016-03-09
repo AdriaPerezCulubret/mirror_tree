@@ -61,7 +61,7 @@ class Interaction(object):
         for row in dist_matrix:
             j=0
             for column in row:
-                if i<j:          # with this, you take out the 0's so n = (N²-N)/2
+                if i<j:          # with this, you take out the 0's so n = (N-N)/2
                     #print (dist_matrix[i,j])
                     matrix_list.append(dist_matrix[i,j])
                 j+=1
