@@ -267,6 +267,7 @@ query_dict = run_blast(options.input, options.database, options.verbose, query_d
 
 # PREDICT INTERACTIONS
 i = 1
+outfile = open("kk.out", "w")
 for seq in itertools.combinations(query_dict.keys(), 2):
     seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
 
@@ -295,10 +296,10 @@ for seq in itertools.combinations(query_dict.keys(), 2):
         interaction.set_dist_matrix(1, file_1 + ".aln")
         interaction.set_dist_matrix(2, file_2 + ".aln")
         i += 1
-        print(seq1.id)
-        print(seq2.id)
-        print(str(interaction.get_corr()))
-        print("\n-----\n")
+        outfile.write(seq1.id)
+        outfile.write(seq2.id)
+        outfile.write(str(interaction.get_corr()))
+        outfile.write("\n-----\n")
 
 
 # REMEMBER TO REMOVE ALL THE TMP FILES!!!
