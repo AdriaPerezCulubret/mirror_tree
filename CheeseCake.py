@@ -5,6 +5,7 @@
 import argparse
 import os
 import sys
+import glob
 import pprint
 import socket
 import itertools
@@ -270,10 +271,15 @@ i = 1
 outfile = open("kk.out", "w")
 for seq in itertools.combinations(query_dict.keys(), 2):
     seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
-
+    if options.verbose:
+        sys.stderr.write("# Trying to analyze %s and %s...\n" %(seq1.id, seq2.id))
     # Now we should run the MSA for each A and B proteins
     # that share at least k species
     common_sp = share_homolog_sp(seq1, seq2, options.species)
+    if common_sp is None:
+        if options.verbose:
+            sys.stderr.write("# They don't have the necessary common species\n\n")
+        continue
     if len(common_sp) >= options.species:
         file_1 = "tmp/%s_1MSA.fa"  % i
         file_2 = "tmp/%s_2MSA.fa"  % i
@@ -304,4 +310,4 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 
 # REMEMBER TO REMOVE ALL THE TMP FILES!!!
 
-#erase_temp(options.verbose)
+erase_temp(options.verbose)
