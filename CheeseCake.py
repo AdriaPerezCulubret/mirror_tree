@@ -5,7 +5,6 @@
 import argparse
 import os
 import sys
-import glob
 import pprint
 import socket
 import itertools
@@ -238,6 +237,7 @@ def print_seqs_MSA(seqobj, filename, common_sp):
 
     return
 
+
 # ----------------------------------------------------
 def erase_temp(verbose):
     if verbose:
@@ -291,3 +291,4 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 # REMEMBER TO REMOVE ALL THE TMP FILES!!!
 
 erase_temp(options.verbose)
+
