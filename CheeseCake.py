@@ -28,28 +28,34 @@ from Bio.Align.Applications import TCoffeeCommandline     as tcoffee
 parser = argparse.ArgumentParser(description="OMNOMNOM.")
 parser.add_argument(
     "-i", "--input",
-    dest="input",
-    action="store",
-    default=None,
-    required=True,
-    help="Input FASTA file."
+    dest     = "input",
+    action   = "store",
+    default  = None,
+    required = True,
+    help     = "Input FASTA file."
 )
 parser.add_argument(
     "-db", "--database",
-    dest="database",
-    action="store",
-    default=None,
-    required=True,
-    help="Database for BLAST."
+    dest     = "database",
+    action   = "store",
+    default  = None,
+    required = True,
+    help     = "Database for BLAST."
 )
 parser.add_argument(
     "-v", "--verbose",
-    dest="verbose",
-    action="store_true",
-    default=False,
-    help="Prints log to STDERR."
+    dest    = "verbose",
+    action  = "store_true",
+    default = False,
+    help    = "Prints log to STDERR."
 )
-
+parser.add_argument(
+    "-sp", "--species",
+    dest     = "species",
+    type     = int,
+    default  = 5,
+    help     = "Minimum number of common species to create mirror tree."
+)
 
 options = parser.parse_args()
 
@@ -100,23 +106,19 @@ def run_blast(in_file, db, verbose, query_dict):
     result_handle = open("tmp/blast_output.xml")
     blast_records = NCBIXML.parse(result_handle)
 
-    i = 1
     for blast_record in blast_records:
-        out = open("tmp/" + str(i) + ".fa", "a")
-        SeqIO.write(query_dict[blast_record.query], out, "fasta")
-
+        # We only keep the best hit (e-value) for each target species
+        # Because BLAST results are sorted by e-value, we keep the first
+        # one we find
+        added_sp = set()
         for alignment in blast_record.alignments:
-            t_species = target_dict[alignment.hit_def].species
-
             # Add species homologs
-            query_dict[blast_record.query].homolog_sp.add(t_species)
+            if target_dict[alignment.hit_def].species not in added_sp:
+                query_dict[blast_record.query].homologs[alignment.hit_def] = target_dict[alignment.hit_def]
+                added_sp.add(target_dict[alignment.hit_def].species)
+            else:
+                continue
 
-            # Add homolog ids with their species
-            query_dict[blast_record.query].homologs[t_species] = target_dict[alignment.hit_def].description
-
-            # Write to FASTA
-            SeqIO.write(target_dict[alignment.hit_def], out, "fasta")
-        i += 1
 
     return query_dict
 
@@ -147,9 +149,9 @@ def fasta_to_dict(fasta, verbose):
 
     record_dict = dict()
 
-    # Let's create a dictionary using SeqRecordOrg
+    # Let's create a dictionary using SequenceObj
     for record in SeqIO.parse(handle, "fasta") :
-        obj = BiopythonImproved.SeqRecordOrg(
+        obj = BiopythonImproved.SequenceObj(
             identifier  = str(record.id),
             seq         = record.seq,
             name        = record.name,
@@ -177,23 +179,18 @@ def create_directories():
     if not os.path.isdir(mypath):
         os.makedirs(mypath)
 
-
 # ----------------------------------------------------
-def do_msa(verbose):
+def do_MSA(files, verbose):
     '''
     Creates a MSA with all the sequences in the fasta file
     '''
-    all_files = os.listdir(path="tmp")
-    all_files = [ file for file in all_files if file[-2:] == "fa"]
-
-
-    for fasta in all_files:
+    for fasta in files:
         if verbose:
             sys.stderr.write("# MSA for %s\n" % fasta)
         tcoffee_cmd = tcoffee(
-            infile  = "tmp/" + fasta,
+            infile  = fasta,
             output  = "clustalw",
-            outfile = "tmp/" + fasta + ".aln",
+            outfile = fasta + ".aln",
         )
         stdout, stderr = tcoffee_cmd()
         if verbose:
@@ -215,9 +212,30 @@ def do_filter():
 # ----------------------------------------------------
 def share_homolog_sp(seq1, seq2, k):
     '''
-    Checks if two  objects
+    Checks if two seq objects share at least k homologs in k species
     '''
-    pass
+    if len(seq1.get_homolog_species() & seq2.get_homolog_species()) >= k:
+        return seq1.get_homolog_species() & seq2.get_homolog_species()
+    else:
+        return None
+
+# ----------------------------------------------------
+def print_seqs_MSA(seqobj, filename, common_sp):
+    '''
+    Creates a FASTA file with the homologs of species common to two
+    sequences
+    '''
+    output_handle = open(filename, "w")
+    SeqIO.write(seqobj, output_handle, "fasta")
+
+    for seq_hom_name, seq_hom_obj in seqobj.homologs.items():
+        if seq_hom_obj.species in common_sp:
+            SeqIO.write(seq_hom_obj, output_handle, "fasta")
+        else:
+            continue
+    output_handle.close()
+
+    return
 
 
 # ----------------------------------------------------
@@ -236,12 +254,23 @@ query_dict  = fasta_to_dict(options.input, options.verbose)
 query_dict = run_blast(options.input, options.database, options.verbose, query_dict)
 
 # PREDICT INTERACTIONS
+i = 1
 for seq in itertools.combinations(query_dict.keys(), 2):
     seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
 
     # Now we should run the MSA for each A and B proteins
     # that share at least k species
-    if share_homolog_sp(seq1, seq2, 4):
-        print("They share at least 4 species!\n")
+    common_sp = share_homolog_sp(seq1, seq2, 4)
+    if len(common_sp) >= options.species:
+        file_1 = "tmp/%s_1MSA.fa" % i
+        file_2 = "tmp/%s_2MSA.fa"  % i
+        print_seqs_MSA(seq1, file_1, common_sp)
+        print_seqs_MSA(seq2, file_2, common_sp)
+        do_MSA((file_1, file_2), options.verbose)
+        i += 1
+
+
+
+
 
 # REMEMBER TO REMOVE ALL THE TMP FILES!!!
