@@ -11,6 +11,7 @@ import socket
 import itertools
 import time
 import re
+import glob
 from Bio import SeqIO
 import Mascarpone
 from Bio.Seq import Seq
@@ -229,7 +230,7 @@ def print_seqs_MSA(seqobj, filename, common_sp):
     output_handle = open(filename, "w")
     SeqIO.write(seqobj, output_handle, "fasta")
 
-    for seq_hom_name, seq_hom_obj in seqobj.homologs.items():
+    for seq_hom_name, seq_hom_obj in sorted(seqobj.homologs.items(), key = lambda seq : seq[1].species ):
         if seq_hom_obj.species in common_sp:
             SeqIO.write(seq_hom_obj, output_handle, "fasta")
         else:
@@ -274,22 +275,33 @@ for seq in itertools.combinations(query_dict.keys(), 2):
     # that share at least k species
     common_sp = share_homolog_sp(seq1, seq2, options.species)
     if len(common_sp) >= options.species:
-        file_1 = "tmp/%s_1MSA.fa" % i
+        file_1 = "tmp/%s_1MSA.fa"  % i
         file_2 = "tmp/%s_2MSA.fa"  % i
-        print_seqs_MSA(seq1, file_1, common_sp)
-        print_seqs_MSA(seq2, file_2, common_sp)
+
+        subset_sp = set()
+        for element in range(0, 20):
+            try:
+                subset_sp.add(common_sp.pop())
+            except:
+                break
+
+        # Print common species seqs to files
+        print_seqs_MSA(seq1, file_1, subset_sp)
+        print_seqs_MSA(seq2, file_2, subset_sp)
+
+        # MSA!
         do_MSA((file_1, file_2), options.verbose)
-        i += 1
+
         interaction = Mascarpone.Interaction(seq1, seq2)
         interaction.set_dist_matrix(1, file_1 + ".aln")
         interaction.set_dist_matrix(2, file_2 + ".aln")
+        i += 1
+        print(seq1.id)
+        print(seq2.id)
         print(str(interaction.get_corr()))
-
-
-
+        print("\n-----\n")
 
 
 # REMEMBER TO REMOVE ALL THE TMP FILES!!!
 
-erase_temp(options.verbose)
-
+#erase_temp(options.verbose)
