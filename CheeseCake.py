@@ -12,7 +12,7 @@ import itertools
 import time
 import re
 from Bio import SeqIO
-import BiopythonImproved
+import Mascarpone
 from Bio.Seq import Seq
 from Bio import AlignIO
 from Bio.Blast import NCBIXML
@@ -152,7 +152,7 @@ def fasta_to_dict(fasta, verbose):
 
     # Let's create a dictionary using SequenceObj
     for record in SeqIO.parse(handle, "fasta") :
-        obj = BiopythonImproved.SequenceObj(
+        obj = Mascarpone.SequenceObj(
             identifier  = str(record.id),
             seq         = record.seq,
             name        = record.name,
@@ -239,11 +239,16 @@ def print_seqs_MSA(seqobj, filename, common_sp):
     return
 
 # ----------------------------------------------------
-def erase_temp():
+def erase_temp(verbose):
+    if verbose:
+        sys.stderr.write("# Removing all tmp files...\n")
     files = glob.glob('tmp/*')
     for f in files:
         os.remove(f)
-    print ('tmp erased!')
+    if verbose:
+        sys.stderr.write("# Removed all tmp files\n\n#  Bye!\n")
+
+
 # ----------------------------------------------------
 # MAIN
 # ----------------------------------------------------
@@ -266,7 +271,7 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 
     # Now we should run the MSA for each A and B proteins
     # that share at least k species
-    common_sp = share_homolog_sp(seq1, seq2, 4)
+    common_sp = share_homolog_sp(seq1, seq2, options.species)
     if len(common_sp) >= options.species:
         file_1 = "tmp/%s_1MSA.fa" % i
         file_2 = "tmp/%s_2MSA.fa"  % i
@@ -274,6 +279,10 @@ for seq in itertools.combinations(query_dict.keys(), 2):
         print_seqs_MSA(seq2, file_2, common_sp)
         do_MSA((file_1, file_2), options.verbose)
         i += 1
+        interaction = Mascarpone.Interaction(seq1, seq2)
+        interaction.set_dist_matrix(1, file_1 + ".aln")
+        interaction.set_dist_matrix(2, file_2 + ".aln")
+        print(str(interaction.get_corr()))
 
 
 
@@ -281,4 +290,4 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 
 # REMEMBER TO REMOVE ALL THE TMP FILES!!!
 
-erase_temp()
+erase_temp(options.verbose)
