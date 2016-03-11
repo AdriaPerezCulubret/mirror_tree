@@ -19,3 +19,16 @@ python3 create_sets.py -i intact.txt -db db/uniprot_sprot.fasta -o input.fasta
 ```
 
 create_sets fetch circa than 77.000 IDs but gets circa 45.000 Ids from our uniprot_swissprot.fasta file, be aware. 
+
+
+
+
+```r
+hola <- read.table(file="prueba")
+library(ggplot2)
+ggplot(hola) + geom_point(aes(x=V4, y=V3), position="jitter")
+```
+
+```sh
+wget 'ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam29.0/Pfam-A.hmm.gz'
+```
