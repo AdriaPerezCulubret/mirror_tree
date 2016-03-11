@@ -105,18 +105,12 @@ def test_program(program):
         else:
             raise Exception("Ooops...Something went wrong")
 
-
 # ----------------------------------------------------
 def test_all():
     test_program("jackhmmer")
     test_program("hmmscan")
     test_program("hmmfetch")
     test_program("hmmalign")
-    test_program("asdf")
-
-
-
-
 
 # ----------------------------------------------------
 def run_blast(in_file, db, verbose, query_dict):
