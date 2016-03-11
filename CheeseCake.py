@@ -17,6 +17,7 @@ import Mascarpone
 from Bio.Seq import Seq
 from Bio import AlignIO
 from Bio.Blast import NCBIXML
+from Bio.SearchIO import HmmerIO
 from Bio.Phylo.TreeConstruction import DistanceCalculator
 from Bio.Blast.Applications import NcbiblastpCommandline as Blastp
 from Bio.Align.Applications import TCoffeeCommandline     as tcoffee
@@ -55,7 +56,6 @@ parser.add_argument(
     "-sp", "--species",
     dest     = "species",
     type     = int,
-    action   = "store_true",
     default  = 5,
     help     = "Minimum number of common species to create mirror tree."
 )
@@ -67,9 +67,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "-pfam", "--pfam",
+    "-p", "--pfam",
     dest     = "pfam",
-    action   = "store_true",
+    action   = "store",
+    default  = None,
     required = True,
     help     = "Tabular file with interactions to consider. Used for train/testing."
 )
@@ -179,7 +180,7 @@ def fasta_to_dict(fasta, verbose):
             species     = get_species(record.description),
             letter_annotations = None,
         )
-        record_dict[record.description] = obj
+        record_dict[record.id] = obj
 
     handle.close()
 
@@ -284,7 +285,22 @@ def run_hmmscan(query_dict, pfam, input, verbose):
     '''
     This functions searches PFAM domains for our query sequences.
     '''
-    os.system("hmmscan %s %s" % (pfan, input))
+    os.system("hmmscan -E 1e-20 --domE 1e-10 %s %s > tmp/hmmscan.out" % (pfam, input))
+    fh = open("tmp/hmmscan.out", "r")
+    hmmer_results = HmmerIO.Hmmer3TextParser(fh)
+
+    for res in hmmer_results:
+        query_obj = query_dict[res.id]
+        for it in res.hits:
+            for hsp in it.hsps:
+                dom = Mascarpone.Domain(
+                    name   = it.id,
+                    evalue = hsp.evalue,
+                    coords = (hsp.env_start, hsp.env_end)
+                )
+                query_obj.domains.append(dom)
+
+    return query_dict
 
 
 # ----------------------------------------------------
@@ -306,6 +322,9 @@ query_dict  = run_hmmscan(
     options.verbose
 )
 
+for q, ob in query_dict.items():
+    print (ob.domains)
+exit(0)
 # RUN BLAST
 #query_dict = run_blast(options.input, options.database, options.verbose, query_dict)
 
