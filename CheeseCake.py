@@ -74,6 +74,15 @@ parser.add_argument(
     help     = "Tabular file with interactions to consider. Used for train/testing."
 )
 
+parser.add_argument(
+    "-t", "--taxonomy",
+    dest     = "taxonomy",
+    action   = "store",
+    default  = None,
+    required = True,
+    help     = "Tabular file with species."
+)
+
 options = parser.parse_args()
 
 
@@ -124,7 +133,8 @@ def run_blast(in_file, db, verbose, query_dict):
 
     # RUN BLAST
     if verbose:
-        sys.stderr.write("# Running NCBI-BLASTp\n")
+        sys.stderr.write("# Running NCBI-BLASTp")
+        sys.stderr.flush()
     blastp_cmd = Blastp(
         query    = in_file,
         db       = db,
@@ -136,7 +146,7 @@ def run_blast(in_file, db, verbose, query_dict):
     stdout, stderr = blastp_cmd()
 
     if verbose:
-        sys.stderr.write("# NCBI-BLASTp... ok\n\n")
+        sys.stderr.write("ok\n\n")
 
 
     # PARSE OUTPUT
@@ -182,7 +192,8 @@ def fasta_to_dict(fasta, verbose):
     handle      = open(fasta, "rU")
     record_dict = dict()
     if verbose:
-        sys.stderr.write("# Reading FASTA file %s\n" % fasta)
+        sys.stderr.write("# Reading FASTA file %s..." % fasta)
+        sys.stderr.flush()
 
     record_dict = dict()
 
@@ -204,7 +215,7 @@ def fasta_to_dict(fasta, verbose):
     handle.close()
 
     if verbose:
-        sys.stderr.write("# Reading FASTA file %s ... ok\n\n" % fasta)
+        sys.stderr.write("ok\n\n")
     return record_dict
 
 # ----------------------------------------------------
@@ -223,7 +234,8 @@ def do_MSA(files, verbose):
     '''
     for fasta in files:
         if verbose:
-            sys.stderr.write("# MSA for %s\n" % fasta)
+            sys.stderr.write("# MSA for %s..." % fasta)
+            sys.stderr.flush()
         tcoffee_cmd = tcoffee(
             infile  = fasta,
             output  = "clustalw",
@@ -231,7 +243,7 @@ def do_MSA(files, verbose):
         )
         stdout, stderr = tcoffee_cmd()
         if verbose:
-            sys.stderr.write("# MSA complete for %s ... ok\n\n" % fasta)
+            sys.stderr.write("ok\n\n")
     return
 
 # ----------------------------------------------------
@@ -247,12 +259,13 @@ def do_filter():
     return
 
 # ----------------------------------------------------
-def share_homolog_sp(seq1, seq2, k):
+def share_homolog_sp(seq1, seq2, k, tax):
     '''
     Checks if two seq objects share at least k homologs in k species
     '''
-    if len(seq1.get_homolog_species() & seq2.get_homolog_species()) >= k:
-        return seq1.get_homolog_species() & seq2.get_homolog_species()
+    common = seq1.get_homolog_species() & seq2.get_homolog_species() & tax
+    if len(common)>= k:
+        return common
     else:
         return None
 
@@ -263,7 +276,7 @@ def print_seqs_MSA(seqobj, filename, common_sp):
     sequences
     '''
     output_handle = open(filename, "w")
-    #SeqIO.write(seqobj, output_handle, "fasta")
+    SeqIO.write(seqobj, output_handle, "fasta")
 
     for seq_hom_obj in sorted(seqobj.homologs, key = lambda seq : seq.species ):
         if seq_hom_obj.species in common_sp:
@@ -325,12 +338,17 @@ def run_hmmscan(query_dict, pfam, input, verbose):
 def read_jack(file, query_dict, target_dict):
     fh = open(file, "r")
 
+    already_added_sp = set()
     for line in fh:
         if line[0] == "#":
             continue
         cols    = line.split()
         t, q, e = cols[0], cols[2], cols[4]
-        query_dict[q].homologs.append(target_dict[t])
+        if (q, target_dict[t].species) not in already_added_sp:
+            query_dict[q].homologs.append(target_dict[t])
+            already_added_sp.add((q,target_dict[t].species))
+        else:
+            continue
 
     return query_dict
 
@@ -340,7 +358,7 @@ def read_jack(file, query_dict, target_dict):
 def run_jackhmmer(query_dict, target_dict, query, target):
     '''
     '''
-    #os.system("jackhmmer -E 1e-20 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
+    #os.system("jackhmmer -E 1e-5 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
     query_dict = read_jack("tmp/jackhmmer.tbl", query_dict, target_dict)
 
     return query_dict
@@ -362,7 +380,18 @@ def print_hmm(query_dict):
 
     return
 
-
+def read_mammals(file, verbose):
+    tax_names = set()
+    fh = open(file, "r")
+    if verbose:
+        sys.stderr.write("# Reading taxonomy file...")
+        sys.stderr.flush()
+    for line in fh:
+        line = line.strip()
+        tax_names.add(line)
+    if verbose:
+        sys.stderr.write("ok\n")
+    return tax_names
 
 # ----------------------------------------------------
 # MAIN
@@ -381,9 +410,16 @@ test_all()
 query_dict  = fasta_to_dict(options.input,    options.verbose)
 target_dict = fasta_to_dict(options.database, options.verbose)
 
+# READ TAXONOMY FILE
+tax_names = read_mammals(options.taxonomy, options.verbose)
+
+# JACKHMMER
 query_dict  = run_jackhmmer(query_dict, target_dict, options.input, options.database)
 
 print_hmm(query_dict)
+
+
+
 
 # IF TESTING/TRAINING
 if options.ints is not None:
@@ -411,22 +447,18 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 
     if options.verbose:
         sys.stderr.write("# Trying to analyze %s and %s...\n" %(seq1.id, seq2.id))
-    # Now we should run the MSA for each A and B proteins
-    # that share at least k species
-    common_sp = share_homolog_sp(seq1, seq2, options.species)
+
+    # Check if they share at least K species from tax_names
+    common_sp = share_homolog_sp(seq1, seq2, options.species, tax_names)
+
     if common_sp is None:
         if options.verbose:
-            sys.stderr.write("# They don't have the necessary common species\n\n")
+            sys.stderr.write("# They don't have the necessary common species.\n\n")
         continue
+
     if len(common_sp) >= options.species:
-        subset_sp = set()
-        for element in range(0, 20):
-            try:
-                subset_sp.add(common_sp.pop())
-            except:
-                break
         # Print common species seqs to files
-        print_seqs_MSA(seq1, seqfile_1, subset_sp)
+        print_seqs_MSA(seq1, seqfile_1, common_sp)
         exit(0)
         #print_seqs_MSA(seq2, file_2, subset_sp)
 
@@ -445,4 +477,4 @@ for seq in itertools.combinations(query_dict.keys(), 2):
         sys.stderr.flush()
 
 
-erase_temp(options.verbose)
+#erase_temp(options.verbose)
