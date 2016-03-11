@@ -16,6 +16,7 @@ import Mascarpone
 from Bio.Seq import Seq
 from Bio import AlignIO
 from Bio.Blast import NCBIXML
+from Bio.SearchIO import HmmerIO
 from Bio.Phylo.TreeConstruction import DistanceCalculator
 from Bio.Blast.Applications import NcbiblastpCommandline as Blastp
 from Bio.Align.Applications import TCoffeeCommandline     as tcoffee
@@ -54,7 +55,6 @@ parser.add_argument(
     "-sp", "--species",
     dest     = "species",
     type     = int,
-    action   = "store_true",
     default  = 5,
     help     = "Minimum number of common species to create mirror tree."
 )
@@ -66,9 +66,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "-pfam", "--pfam",
+    "-p", "--pfam",
     dest     = "pfam",
-    action   = "store_true",
+    action   = "store",
+    default  = None,
     required = True,
     help     = "Tabular file with interactions to consider. Used for train/testing."
 )
@@ -178,7 +179,7 @@ def fasta_to_dict(fasta, verbose):
             species     = get_species(record.description),
             letter_annotations = None,
         )
-        record_dict[record.description] = obj
+        record_dict[record.id] = obj
 
     handle.close()
 
@@ -283,7 +284,45 @@ def run_hmmscan(query_dict, pfam, input, verbose):
     '''
     This functions searches PFAM domains for our query sequences.
     '''
-    os.system("hmmscan %s %s" % (pfan, input))
+    os.system("hmmscan -E 1e-20 --domE 1e-10 %s %s > tmp/hmmscan.out" % (pfam, input))
+    fh = open("tmp/hmmscan.out", "r")
+    hmmer_results = HmmerIO.Hmmer3TextParser(fh)
+
+    for res in hmmer_results:
+        query_obj = query_dict[res.id]
+        for it in res.hits:
+            for hsp in it.hsps:
+                dom = Mascarpone.Domain(
+                    name   = it.id,
+                    evalue = hsp.evalue,
+                    coords = (hsp.env_start, hsp.env_end)
+                )
+                query_obj.domains.append(dom)
+
+    return query_dict
+
+def read_jack(file, query_dict, target_dict):
+    fh = open(file, "r")
+
+    for line in fh:
+        if line[0] == "#":
+            continue
+        cols    = line.split()
+        t, q, e = cols[0], cols[2], cols[4]
+        query_dict[q].homologs.append(target_dict[t])
+
+    return query_dict
+
+    
+def run_jackhmmer(query_dict, target_dict, query, target):
+    '''
+    '''
+    #os.system("jackhmmer -E 1e-20 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
+    query_dict = read_jack("tmp/jackhmmer.tbl", query_dict, target_dict)
+
+    return query_dict
+
+
 
 
 # ----------------------------------------------------
@@ -296,15 +335,12 @@ if options.verbose:
 create_directories()
 
 # READ PROBLEM SEQUENCES
-query_dict  = fasta_to_dict(options.input, options.verbose)
+query_dict  = fasta_to_dict(options.input,    options.verbose)
+target_dict = fasta_to_dict(options.database, options.verbose)
 
-query_dict  = run_hmmscan(
-    query_dict,
-    options.pfam,
-    options.input,
-    options.verbose
-)
+query_dict  = run_jackhmmer(query_dict, target_dict, options.input, options.database)
 
+exit(0)
 # RUN BLAST
 #query_dict = run_blast(options.input, options.database, options.verbose, query_dict)
 
