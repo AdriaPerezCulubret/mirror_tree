@@ -54,8 +54,8 @@ class Interaction(object):
 
     def set_dist_matrix (self, numseq, file):
         aln = AlignIO.read(open(file), 'clustal')
-        print (file)
-        calculator  = DistanceCalculator('blosum62')
+        calculator = DistanceCalculator('blosum62')
+
         dist_matrix = calculator.get_distance(aln)
         i=0
         j=0
@@ -94,3 +94,10 @@ class Interaction(object):
             return self.correlation
         else:
             return self.correlation
+
+class ProgramNotFound(Exception):
+    def __init__(self, program):
+        self.program = program
+
+    def __str__(self):
+        return "The program %s was not found in your system" %self.program
