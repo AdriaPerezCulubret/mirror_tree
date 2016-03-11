@@ -2,17 +2,17 @@
 # MODULES
 # ----------------------------------------------------
 
-import argparse
 import os
+import re
 import sys
+import time
 import glob
 import socket
+import argparse
 import itertools
-import time
-import re
-import glob
-from Bio import SeqIO
+import subprocess
 import Mascarpone
+from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio import AlignIO
 from Bio.Blast import NCBIXML
@@ -91,6 +91,32 @@ def print_start_rep():
 # ------------------------------------------
 
 """ %(HOSTNAME, time.ctime()))
+
+# ----------------------------------------------------
+def test_program(program):
+    try:
+        # pipe output to /dev/null for silence
+        null = open("/dev/null", "w")
+        subprocess.Popen(program, stdout=null, stderr=null)
+        null.close()
+    except OSError as e:
+        if e.errno == os.errno.ENOENT:
+            raise Mascarpone.ProgramNotFound(program)
+        else:     
+            raise Exception("Ooops...Something went wrong")
+
+
+# ----------------------------------------------------
+def test_all():
+    test_program("jackhmmer")
+    test_program("hmmscan")
+    test_program("hmmfetch")
+    test_program("hmmalign")
+    test_program("asdf")
+
+
+
+
 
 # ----------------------------------------------------
 def run_blast(in_file, db, verbose, query_dict):
@@ -301,6 +327,7 @@ def run_hmmscan(query_dict, pfam, input, verbose):
 
     return query_dict
 
+# ----------------------------------------------------
 def read_jack(file, query_dict, target_dict):
     fh = open(file, "r")
 
@@ -313,7 +340,8 @@ def read_jack(file, query_dict, target_dict):
 
     return query_dict
 
-    
+
+# ---------------------------------------------------- 
 def run_jackhmmer(query_dict, target_dict, query, target):
     '''
     '''
@@ -325,14 +353,19 @@ def run_jackhmmer(query_dict, target_dict, query, target):
 
 
 
+
 # ----------------------------------------------------
 # MAIN
 # ----------------------------------------------------
+
 
 # STARTING PROGRAM
 if options.verbose:
     print_start_rep()
 create_directories()
+
+# TESTTING INSTALLED PROGRAMS
+test_all()
 
 # READ PROBLEM SEQUENCES
 query_dict  = fasta_to_dict(options.input,    options.verbose)

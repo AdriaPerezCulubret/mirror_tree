@@ -94,3 +94,10 @@ class Interaction(object):
             return self.correlation
         else:
             return self.correlation
+
+class ProgramNotFound(Exception):
+    def __init__(self, program):
+        self.program = program
+
+    def __str__(self):
+        return "The program %s was not found in your system" %self.program
