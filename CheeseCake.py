@@ -59,6 +59,14 @@ parser.add_argument(
     help     = "Minimum number of common species to create mirror tree."
 )
 
+parser.add_argument(
+    "-ints", "--ints",
+    dest     = "ints",
+    type     = int,
+    default  = 5,
+    help     = "Tabular file with interactions to consider. Used for train/testing."
+)
+
 options = parser.parse_args()
 
 
@@ -252,6 +260,20 @@ def erase_temp(verbose):
 
 
 # ----------------------------------------------------
+def read_interactome(int_file):
+    interactions = set()
+    intis = open(int_file, "r")
+    next(intis) # Skip first line
+    for line in intis:
+        lista = line.split("\t")
+        lista[0] = lista[0].split(":")[1]
+        lista[1] = lista[1].split(":")[1]
+        interactions.add((lista[0],lista[1]))
+        interactions.add((lista[1],lista[0]))
+    return interactions
+
+
+# ----------------------------------------------------
 # MAIN
 # ----------------------------------------------------
 
@@ -266,11 +288,28 @@ query_dict  = fasta_to_dict(options.input, options.verbose)
 # RUN BLAST
 query_dict = run_blast(options.input, options.database, options.verbose, query_dict)
 
+# IF TESTING/TRAINING
+if options.ints is not None:
+    interactions = read_interactome(options.ints)
+
+
+
+
+# ---------------------------------
+
 # PREDICT INTERACTIONS
 i = 1
-outfile = open("kk.out", "w")
 for seq in itertools.combinations(query_dict.keys(), 2):
     seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
+
+    # IF TRAINING/TESTING
+    if options.ints is not None:
+        seq1_id = seq1.id.split("|")[1]
+        seq2_id = seq2.id.split("|")[1]
+        tup = (seq1_id, seq2_id)
+        if tup not in interactions:
+            continue
+
     if options.verbose:
         sys.stderr.write("# Trying to analyze %s and %s...\n" %(seq1.id, seq2.id))
     # Now we should run the MSA for each A and B proteins
@@ -302,12 +341,10 @@ for seq in itertools.combinations(query_dict.keys(), 2):
         interaction.set_dist_matrix(1, file_1 + ".aln")
         interaction.set_dist_matrix(2, file_2 + ".aln")
         i += 1
-        outfile.write(seq1.id)
-        outfile.write(seq2.id)
-        outfile.write(str(interaction.get_corr()))
-        outfile.write("\n-----\n")
+        sys.stderr.write(seq1_id + " ")
+        sys.stderr.write(seq2_id + " ")
+        sys.stderr.write(str(interaction.get_corr()) + "\n")
+        sys.stderr.flush()
 
-
-# REMEMBER TO REMOVE ALL THE TMP FILES!!!
 
 erase_temp(options.verbose)
