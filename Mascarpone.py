@@ -52,7 +52,6 @@ class Interaction(object):
 
     def set_dist_matrix (self, numseq, file):
         aln = AlignIO.read(open(file), 'clustal')
-        print (file)
         calculator = DistanceCalculator('blosum62')
         dist_matrix = calculator.get_distance(aln)
         i=0

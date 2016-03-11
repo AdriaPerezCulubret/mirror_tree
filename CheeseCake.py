@@ -6,7 +6,6 @@ import argparse
 import os
 import sys
 import glob
-import pprint
 import socket
 import itertools
 import time
