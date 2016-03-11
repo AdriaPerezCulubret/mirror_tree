@@ -244,9 +244,9 @@ def print_seqs_MSA(seqobj, filename, common_sp):
     sequences
     '''
     output_handle = open(filename, "w")
-    SeqIO.write(seqobj, output_handle, "fasta")
+    #SeqIO.write(seqobj, output_handle, "fasta")
 
-    for seq_hom_name, seq_hom_obj in sorted(seqobj.homologs.items(), key = lambda seq : seq[1].species ):
+    for seq_hom_obj in sorted(seqobj.homologs, key = lambda seq : seq.species ):
         if seq_hom_obj.species in common_sp:
             SeqIO.write(seq_hom_obj, output_handle, "fasta")
         else:
@@ -302,6 +302,7 @@ def run_hmmscan(query_dict, pfam, input, verbose):
 
     return query_dict
 
+# ----------------------------------------------------
 def read_jack(file, query_dict, target_dict):
     fh = open(file, "r")
 
@@ -314,7 +315,7 @@ def read_jack(file, query_dict, target_dict):
 
     return query_dict
 
-    
+# ----------------------------------------------------
 def run_jackhmmer(query_dict, target_dict, query, target):
     '''
     '''
@@ -323,7 +324,22 @@ def run_jackhmmer(query_dict, target_dict, query, target):
 
     return query_dict
 
+# ----------------------------------------------------
+def hmmer_align(seq_file, hmm_file):
+    '''
+    '''
+    os.system("hmmalign --outformat Stockholm -o %s.out %s %s" %(seq_file, hmm_file, seq_file))
 
+# ----------------------------------------------------
+def print_hmm(query_dict):
+    '''
+    Fetches hmm file from jackhmmer and prints the HMM to a file
+    '''
+    for qname, qobj in query_dict.items():
+        clean_name = qname.replace("|", "_")
+        os.system("hmmfetch tmp/chkhmm-5.hmm '%s-i4' > tmp/%s.hmm " %(qname, clean_name))
+
+    return
 
 
 # ----------------------------------------------------
@@ -341,15 +357,11 @@ target_dict = fasta_to_dict(options.database, options.verbose)
 
 query_dict  = run_jackhmmer(query_dict, target_dict, options.input, options.database)
 
-exit(0)
-# RUN BLAST
-#query_dict = run_blast(options.input, options.database, options.verbose, query_dict)
+print_hmm(query_dict)
 
 # IF TESTING/TRAINING
 if options.ints is not None:
     interactions = read_interactome(options.ints)
-
-
 
 
 # ---------------------------------
@@ -358,6 +370,10 @@ if options.ints is not None:
 i = 1
 for seq in itertools.combinations(query_dict.keys(), 2):
     seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
+    seqfile_1 = "tmp/%s_1MSA.fa" % i
+    seqfile_2 = "tmp/%s_2MSA.fa" % i
+    hmmfile_1 = "tmp/%s.hmm" % seq1.id.replace("|", "_")
+    hmmfile_2 = "tmp/%s.hmm" % seq2.id.replace("|", "_")
 
     # IF TRAINING/TESTING
     if options.ints is not None:
@@ -377,22 +393,21 @@ for seq in itertools.combinations(query_dict.keys(), 2):
             sys.stderr.write("# They don't have the necessary common species\n\n")
         continue
     if len(common_sp) >= options.species:
-        file_1 = "tmp/%s_1MSA.fa"  % i
-        file_2 = "tmp/%s_2MSA.fa"  % i
-
         subset_sp = set()
         for element in range(0, 20):
             try:
                 subset_sp.add(common_sp.pop())
             except:
                 break
-
         # Print common species seqs to files
-        print_seqs_MSA(seq1, file_1, subset_sp)
-        print_seqs_MSA(seq2, file_2, subset_sp)
+        print_seqs_MSA(seq1, seqfile_1, subset_sp)
+        exit(0)
+        #print_seqs_MSA(seq2, file_2, subset_sp)
+
+        hmmer_align(seqfile_1, hmmfile_1)
 
         # MSA!
-        do_MSA((file_1, file_2), options.verbose)
+        #do_MSA((file_1, file_2), options.verbose)
 
         interaction = Mascarpone.Interaction(seq1, seq2)
         interaction.set_dist_matrix(1, file_1 + ".aln")

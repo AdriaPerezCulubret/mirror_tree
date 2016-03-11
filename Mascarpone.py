@@ -33,7 +33,7 @@ class SequenceObj(SeqIO.SeqRecord):
         '''
         if self.__homolog_sp is None:
             self.__homolog_sp = set()
-            for homo_name, homo_seq in self.homologs.items():
+            for homo_seq in self.homologs:
                 self.__homolog_sp.add(homo_seq.species)
             return self.__homolog_sp
         else:
