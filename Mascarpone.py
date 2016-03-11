@@ -23,8 +23,8 @@ class SequenceObj(SeqIO.SeqRecord):
             letter_annotations = letter_annotations
         )
         self.species      = species
-        self.homologs     = dict()
-        self.domains      = list()
+        self.homologs     = list()
+        self.hmm          = None
         self.__homolog_sp = None
 
     def get_homolog_species(self):
@@ -38,32 +38,6 @@ class SequenceObj(SeqIO.SeqRecord):
             return self.__homolog_sp
         else:
             return self.__homolog_sp
-
-
-class Domain(object):
-    '''
-    This is a class for PFAM domains.
-        name  : name of the Domain
-        evalue: E-value of the domain for a particular protein
-        start : start coordinate in reference to the protein
-        end   : end coordinate
-    '''
-
-    def __init__(self, name, evalue, coords):
-        self.name   = name
-        self.evalue = evalue
-        self.start  = coords[0]
-        self.end    = coords[1]
-
-    def length(self):
-        return self.end - self.start + 1
-
-    def __lt__(self, target):
-        return self.evalue < target.evalue
-
-    def __eq__(self, target):
-        return self.evalue == target.evalue
-
 
 
 class Interaction(object):

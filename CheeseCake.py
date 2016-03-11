@@ -302,6 +302,29 @@ def run_hmmscan(query_dict, pfam, input, verbose):
 
     return query_dict
 
+def read_jack(file, query_dict, target_dict):
+    fh = open(file, "r")
+
+    for line in fh:
+        if line[0] == "#":
+            continue
+        cols    = line.split()
+        t, q, e = cols[0], cols[2], cols[4]
+        query_dict[q].homologs.append(target_dict[t])
+
+    return query_dict
+
+    
+def run_jackhmmer(query_dict, target_dict, query, target):
+    '''
+    '''
+    #os.system("jackhmmer -E 1e-20 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
+    query_dict = read_jack("tmp/jackhmmer.tbl", query_dict, target_dict)
+
+    return query_dict
+
+
+
 
 # ----------------------------------------------------
 # MAIN
@@ -313,17 +336,11 @@ if options.verbose:
 create_directories()
 
 # READ PROBLEM SEQUENCES
-query_dict  = fasta_to_dict(options.input, options.verbose)
+query_dict  = fasta_to_dict(options.input,    options.verbose)
+target_dict = fasta_to_dict(options.database, options.verbose)
 
-query_dict  = run_hmmscan(
-    query_dict,
-    options.pfam,
-    options.input,
-    options.verbose
-)
+query_dict  = run_jackhmmer(query_dict, target_dict, options.input, options.database)
 
-for q, ob in query_dict.items():
-    print (ob.domains)
 exit(0)
 # RUN BLAST
 #query_dict = run_blast(options.input, options.database, options.verbose, query_dict)
