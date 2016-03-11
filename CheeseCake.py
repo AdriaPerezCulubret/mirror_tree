@@ -55,6 +55,7 @@ parser.add_argument(
     "-sp", "--species",
     dest     = "species",
     type     = int,
+    action   = "store_true",
     default  = 5,
     help     = "Minimum number of common species to create mirror tree."
 )
@@ -62,8 +63,14 @@ parser.add_argument(
 parser.add_argument(
     "-ints", "--ints",
     dest     = "ints",
-    type     = int,
-    default  = 5,
+    help     = "Tabular file with interactions to consider. Used for train/testing."
+)
+
+parser.add_argument(
+    "-pfam", "--pfam",
+    dest     = "pfam",
+    action   = "store_true",
+    required = True,
     help     = "Tabular file with interactions to consider. Used for train/testing."
 )
 
@@ -272,6 +279,13 @@ def read_interactome(int_file):
         interactions.add((lista[1],lista[0]))
     return interactions
 
+# ----------------------------------------------------
+def run_hmmscan(query_dict, pfam, input, verbose):
+    '''
+    This functions searches PFAM domains for our query sequences.
+    '''
+    os.system("hmmscan %s %s" % (pfan, input))
+
 
 # ----------------------------------------------------
 # MAIN
@@ -285,8 +299,15 @@ create_directories()
 # READ PROBLEM SEQUENCES
 query_dict  = fasta_to_dict(options.input, options.verbose)
 
+query_dict  = run_hmmscan(
+    query_dict,
+    options.pfam,
+    options.input,
+    options.verbose
+)
+
 # RUN BLAST
-query_dict = run_blast(options.input, options.database, options.verbose, query_dict)
+#query_dict = run_blast(options.input, options.database, options.verbose, query_dict)
 
 # IF TESTING/TRAINING
 if options.ints is not None:
