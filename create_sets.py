@@ -93,10 +93,10 @@ def filter_db (db_fh):
 inter_fh = open (options.inter)
 inter_fh.readline()
 prot_inter = id_interactome(inter_fh)
-print (len(prot_inter))
 
 # Filter by items on the set in the uniprot data set and print them in a file
 filter_db(options.database)
+
 
 
 
