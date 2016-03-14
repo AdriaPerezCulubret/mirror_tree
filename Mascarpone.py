@@ -23,7 +23,8 @@ class SequenceObj(SeqIO.SeqRecord):
             letter_annotations = letter_annotations
         )
         self.species      = species
-        self.homologs     = dict()
+        self.homologs     = list()
+        self.hmm          = None
         self.__homolog_sp = None
 
     def get_homolog_species(self):
@@ -32,11 +33,12 @@ class SequenceObj(SeqIO.SeqRecord):
         '''
         if self.__homolog_sp is None:
             self.__homolog_sp = set()
-            for homo_name, homo_seq in self.homologs.items():
+            for homo_seq in self.homologs:
                 self.__homolog_sp.add(homo_seq.species)
             return self.__homolog_sp
         else:
             return self.__homolog_sp
+
 
 class Interaction(object):
     '''
@@ -52,8 +54,8 @@ class Interaction(object):
 
     def set_dist_matrix (self, numseq, file):
         aln = AlignIO.read(open(file), 'clustal')
-        print (file)
-        calculator  = DistanceCalculator('blosum62')
+        calculator = DistanceCalculator('blosum62')
+
         dist_matrix = calculator.get_distance(aln)
         i=0
         j=0
@@ -61,7 +63,7 @@ class Interaction(object):
         for row in dist_matrix:
             j=0
             for column in row:
-                if i<j:          # with this, you take out the 0's so n = (N²-N)/2
+                if i<j:          # with this, you take out the 0's so n = (N-N)/2
                     #print (dist_matrix[i,j])
                     matrix_list.append(dist_matrix[i,j])
                 j+=1
@@ -92,3 +94,10 @@ class Interaction(object):
             return self.correlation
         else:
             return self.correlation
+
+class ProgramNotFound(Exception):
+    def __init__(self, program):
+        self.program = program
+
+    def __str__(self):
+        return "The program %s was not found in your system" %self.program
