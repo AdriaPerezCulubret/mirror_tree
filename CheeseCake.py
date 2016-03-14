@@ -278,6 +278,9 @@ def hmmer_align(seq_file, hmm_file):
     '''
     cmd = 'hmmalign --outformat Stockholm "%s" "%s" | perl -ne \'print uc($_);\' > %s.out' %(hmm_file, seq_file, seq_file)
     os.system(cmd)
+    #fh = open("%s.out" % seq_file, "r")
+    #new = open("%s.clustal" % seq_file, "w")
+    #AlignIO.convert(fh, "stockholm", new, "clustal")
 
 # ----------------------------------------------------
 def hmm_fetch_finder(qname, clean_name):
