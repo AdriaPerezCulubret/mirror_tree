@@ -262,7 +262,7 @@ def run_jackhmmer(query_dict, target_dict, query, target, verbose):
     if verbose:
         sys.stderr.write("# Performing jackhmmer search...")
         sys.stderr.flush()
-    #os.system("jackhmmer -E 1e-5 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
+    os.system("jackhmmer -E 1e-5 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
     query_dict = read_jack("tmp/jackhmmer.tbl", query_dict, target_dict)
     if verbose:
         sys.stderr.write("ok\n")
@@ -415,14 +415,14 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 
 
 
-        #interaction = Mascarpone.Interaction(seq1, seq2)
-        #interaction.set_dist_matrix(1, file_1 + ".aln")
-        #interaction.set_dist_matrix(2, file_2 + ".aln")
-        #i += 1
-        #sys.stderr.write(seq1_id + " ")
-        #sys.stderr.write(seq2_id + " ")
-        #sys.stderr.write(str(interaction.get_corr()) + "\n")
-        #sys.stderr.flush()
+        interaction = Mascarpone.Interaction(seq1, seq2)
+        interaction.set_dist_matrix(1, "KK2")
+        #interaction.set_dist_matrix(2, seqfile_2 + ".out")
+        i += 1
+        sys.stderr.write(seq1.id + " ")
+        sys.stderr.write(seq2.id + " ")
+        sys.stderr.write(str(interaction.get_corr()) + "\n")
+        sys.stderr.flush()
 
 print_job("REMOVING TEMP FILES")
 #erase_temp(options.verbose)
