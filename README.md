@@ -32,3 +32,20 @@ ggplot(hola) + geom_point(aes(x=V4, y=V3), position="jitter")
 ```sh
 wget 'ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam29.0/Pfam-A.hmm.gz'
 ```
+
+## HMMER commands
+
+```sh
+hmmpress db db/Pfam-A.hmm
+hmmscan db/Pfam-A.hmm prova.fa
+
+
+```
+
+# Non-interacting proteins
+```sh
+ 
+wget 'http://mips.helmholtz-muenchen.de/proj/ppi/negatome/manual_stringent.txt'
+mv manual_stringent.txt db/NonInt.tbl
+
+```

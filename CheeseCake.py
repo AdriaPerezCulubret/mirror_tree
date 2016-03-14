@@ -97,9 +97,9 @@ def print_start_rep():
 # ----------------------------------------------------
 def print_job(string):
     sys.stderr.write('''
-# ----------------------
+# ------------------------------------------
 # %s
-# ----------------------
+# ------------------------------------------
 ''' % string)
 
 
@@ -283,7 +283,7 @@ def run_jackhmmer(query_dict, target_dict, query, target, verbose):
     if verbose:
         sys.stderr.write("# Performing jackhmmer search...")
         sys.stderr.flush()
-    #os.system("jackhmmer -E 1e-5 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
+    os.system("jackhmmer -E 1e-5 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
     query_dict = read_jack("tmp/jackhmmer.tbl", query_dict, target_dict)
     if verbose:
         sys.stderr.write("ok\n")
@@ -414,24 +414,26 @@ for seq in itertools.combinations(query_dict.keys(), 2):
             continue
 
     if options.verbose:
-        sys.stderr.write("# Trying to analyze %s and %s...\n" %(seq1.id, seq2.id))
+        print_job("INTERACTION: %s <-> %s" % (seq1.id, seq2.id) )
 
     # Check if they share at least K species from tax_names
     common_sp = share_homolog_sp(seq1, seq2, options.species, tax_names)
 
     if common_sp is None:
         if options.verbose:
-            sys.stderr.write("# They don't have the necessary common species.\n\n")
+            sys.stderr.write("# They don't have %s common species.\n" % options.species)
         continue
 
     if len(common_sp) >= options.species:
         print_seqs_MSA(seq1, seqfile_1, common_sp)
         print_seqs_MSA(seq2, seqfile_2, common_sp)
 
-        print_job("PERFORMING MSA FOR %s" % seq1.id )
+        if options.verbose:
+            sys.stderr.write("# Performing MSA for %s\n" % seq1.id )
         hmmer_align(seqfile_1, hmmfile_1)
 
-        print_job("PERFORMING MSA FOR %s" % seq2.id )
+        if options.verbose:
+            sys.stderr.write("# Performing MSA for %s\n" % seq2.id )
         hmmer_align(seqfile_2, hmmfile_2)
 
 
