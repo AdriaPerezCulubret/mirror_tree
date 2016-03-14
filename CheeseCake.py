@@ -397,7 +397,6 @@ if options.ints is not None:
 # ---------------------------------
 
 # PREDICT INTERACTIONS
-print_job("PREDICTING INTERACTIONS")
 i = 1
 for seq in itertools.combinations(query_dict.keys(), 2):
     seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
@@ -429,7 +428,13 @@ for seq in itertools.combinations(query_dict.keys(), 2):
         print_seqs_MSA(seq1, seqfile_1, common_sp)
         print_seqs_MSA(seq2, seqfile_2, common_sp)
 
+        print_job("PERFORMING MSA FOR %s" % seq1.id )
         hmmer_align(seqfile_1, hmmfile_1)
+
+        print_job("PERFORMING MSA FOR %s" % seq2.id )
+        hmmer_align(seqfile_2, hmmfile_2)
+
+
 
 
         #interaction = Mascarpone.Interaction(seq1, seq2)
