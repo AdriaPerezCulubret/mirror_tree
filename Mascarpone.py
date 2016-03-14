@@ -53,7 +53,7 @@ class Interaction(object):
         self.correlation = None
 
     def set_dist_matrix (self, numseq, file):
-        aln = AlignIO.read(open(file), 'clustal')
+        aln = AlignIO.read(open(file), 'stockholm')
         calculator = DistanceCalculator('blosum62')
 
         dist_matrix = calculator.get_distance(aln)

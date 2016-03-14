@@ -262,7 +262,7 @@ def run_jackhmmer(query_dict, target_dict, query, target, verbose):
     if verbose:
         sys.stderr.write("# Performing jackhmmer search...")
         sys.stderr.flush()
-    os.system("jackhmmer -E 1e-5 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
+    #os.system("jackhmmer -E 1e-5 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
     query_dict = read_jack("tmp/jackhmmer.tbl", query_dict, target_dict)
     if verbose:
         sys.stderr.write("ok\n")
