@@ -241,7 +241,7 @@ def run_hmmscan(query_dict, pfam, input, verbose):
     '''
     This functions searches PFAM domains for our query sequences.
     '''
-    os.system("hmmscan -E 1e-20 --domE 1e-10 %s %s > tmp/hmmscan.out" % (pfam, input))
+    #os.system("hmmscan -E 1e-20 --domE 1e-10 %s %s > tmp/hmmscan.out" % (pfam, input))
     fh = open("tmp/hmmscan.out", "r")
     hmmer_results = HmmerIO.Hmmer3TextParser(fh)
 
@@ -438,9 +438,8 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 
 
 
-
         interaction = Mascarpone.Interaction(seq1, seq2)
-        interaction.set_dist_matrix(1, "KK2")
+        interaction.set_dist_matrix(1, "corrected_clust.aln")
         #interaction.set_dist_matrix(2, seqfile_2 + ".out")
         i += 1
         sys.stderr.write(seq1.id + " ")
