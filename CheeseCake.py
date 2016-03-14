@@ -15,13 +15,7 @@ import Mascarpone
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio import AlignIO
-from Bio.Blast import NCBIXML
 from Bio.SearchIO import HmmerIO
-from Bio.Phylo.TreeConstruction import DistanceCalculator
-from Bio.Blast.Applications import NcbiblastpCommandline as Blastp
-from Bio.Align.Applications import TCoffeeCommandline     as tcoffee
-
-
 
 # ----------------------------------------------------
 # OPTIONS
@@ -98,8 +92,16 @@ def print_start_rep():
 #                  host: %s
 #            start time: %s
 # ------------------------------------------
-
 """ %(HOSTNAME, time.ctime()))
+
+# ----------------------------------------------------
+def print_job(string):
+    sys.stderr.write('''
+# ----------------------
+# %s
+# ----------------------
+''' % string)
+
 
 # ----------------------------------------------------
 def test_program(program):
@@ -120,54 +122,6 @@ def test_all():
     test_program("hmmscan")
     test_program("hmmfetch")
     test_program("hmmalign")
-
-# ----------------------------------------------------
-def run_blast(in_file, db, verbose, query_dict):
-    '''
-    This function runs BLAST and prints FASTA files with orthologs
-    for each input protein.
-    '''
-
-    # GET SEQUENCE DICTIONARIES
-    target_dict = fasta_to_dict(db + ".fa", verbose)
-
-    # RUN BLAST
-    if verbose:
-        sys.stderr.write("# Running NCBI-BLASTp")
-        sys.stderr.flush()
-    blastp_cmd = Blastp(
-        query    = in_file,
-        db       = db,
-        evalue   = "1e-100",
-        outfmt   = 5,
-        out      = "tmp/blast_output.xml"
-    )
-
-    stdout, stderr = blastp_cmd()
-
-    if verbose:
-        sys.stderr.write("ok\n\n")
-
-
-    # PARSE OUTPUT
-    result_handle = open("tmp/blast_output.xml")
-    blast_records = NCBIXML.parse(result_handle)
-
-    for blast_record in blast_records:
-        # We only keep the best hit (e-value) for each target species
-        # Because BLAST results are sorted by e-value, we keep the first
-        # one we find
-        added_sp = set()
-        for alignment in blast_record.alignments:
-            # Add species homologs
-            if target_dict[alignment.hit_def].species not in added_sp:
-                query_dict[blast_record.query].homologs[alignment.hit_def] = target_dict[alignment.hit_def]
-                added_sp.add(target_dict[alignment.hit_def].species)
-            else:
-                continue
-
-
-    return query_dict
 
 # ----------------------------------------------------
 def get_species(description):
@@ -215,7 +169,7 @@ def fasta_to_dict(fasta, verbose):
     handle.close()
 
     if verbose:
-        sys.stderr.write("ok\n\n")
+        sys.stderr.write("ok\n")
     return record_dict
 
 # ----------------------------------------------------
@@ -226,37 +180,6 @@ def create_directories():
     mypath = "tmp"
     if not os.path.isdir(mypath):
         os.makedirs(mypath)
-
-# ----------------------------------------------------
-def do_MSA(files, verbose):
-    '''
-    Creates a MSA with all the sequences in the fasta file
-    '''
-    for fasta in files:
-        if verbose:
-            sys.stderr.write("# MSA for %s..." % fasta)
-            sys.stderr.flush()
-        tcoffee_cmd = tcoffee(
-            infile  = fasta,
-            output  = "clustalw",
-            outfile = fasta + ".aln",
-        )
-        stdout, stderr = tcoffee_cmd()
-        if verbose:
-            sys.stderr.write("ok\n\n")
-    return
-
-# ----------------------------------------------------
-def do_filter():
-    '''
-    Filter the MSA:
-        - No paralogous sequences
-        - At least 4 sequences from different organisms for each query protein
-        - The organisms must be coincident from all proteins
-    '''
-    all_files = os.listdir(path="tmp")
-    all_files = [ file for file in all_files if file[-2:] == "aln"]
-    return
 
 # ----------------------------------------------------
 def share_homolog_sp(seq1, seq2, k, tax):
@@ -287,9 +210,11 @@ def print_seqs_MSA(seqobj, filename, common_sp):
 
     return
 
-
 # ----------------------------------------------------
 def erase_temp(verbose):
+    '''
+    Removes temporary files
+    '''
     if verbose:
         sys.stderr.write("# Removing all tmp files...\n")
     files = glob.glob('tmp/*')
@@ -297,7 +222,6 @@ def erase_temp(verbose):
         os.remove(f)
     if verbose:
         sys.stderr.write("# Removed all tmp files\n\n#  Bye!\n")
-
 
 # ----------------------------------------------------
 def read_interactome(int_file):
@@ -352,34 +276,70 @@ def read_jack(file, query_dict, target_dict):
 
     return query_dict
 
-
-
 # ----------------------------------------------------
-def run_jackhmmer(query_dict, target_dict, query, target):
+def run_jackhmmer(query_dict, target_dict, query, target, verbose):
     '''
     '''
+    if verbose:
+        sys.stderr.write("# Performing jackhmmer search...")
+        sys.stderr.flush()
     #os.system("jackhmmer -E 1e-5 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
     query_dict = read_jack("tmp/jackhmmer.tbl", query_dict, target_dict)
+    if verbose:
+        sys.stderr.write("ok\n")
+        sys.stderr.flush()
 
     return query_dict
 
 # ----------------------------------------------------
 def hmmer_align(seq_file, hmm_file):
     '''
+    Aligns all the sequences homologous to the HMM generated by jackhmmer
     '''
     os.system("hmmalign --outformat Stockholm -o %s.out %s %s" %(seq_file, hmm_file, seq_file))
+    fh = open("%s.out" % seq_file, "r")
+    new = open("KKKK", "w")
+    AlignIO.convert(fh, "stockholm", new, "clustal")
+
 
 # ----------------------------------------------------
-def print_hmm(query_dict):
+def hmm_fetch_finder(qname, clean_name):
+    '''
+    This function searches the HMM for the given sequence name iteratively in the different
+    chkhmm files generated by jackhmmer
+    '''
+    for i in reversed( range(5) ):
+        filenum    = i + 1
+        model_name = qname
+        filename   = "tmp/chkhmm-%s.hmm" % filenum
+
+        if filenum != 1:
+            model_name = qname + "-" + str(i)
+
+        err_code = os.system("hmmfetch %s '%s' > tmp/%s.hmm 2> /dev/null" % (filename, model_name, clean_name))
+        if err_code == 0:
+            # HMM was found
+            break
+
+# ----------------------------------------------------
+def print_hmm(query_dict, verbose):
     '''
     Fetches hmm file from jackhmmer and prints the HMM to a file
     '''
+    if verbose:
+        sys.stderr.write("# Fetching hmm profiles...")
+        sys.stderr.flush()
+
     for qname, qobj in query_dict.items():
         clean_name = qname.replace("|", "_")
-        os.system("hmmfetch tmp/chkhmm-5.hmm '%s-i4' > tmp/%s.hmm " %(qname, clean_name))
+        hmm_fetch_finder(qname, clean_name)
+
+    if verbose:
+        sys.stderr.write("ok\n")
 
     return
 
+# ----------------------------------------------------
 def read_mammals(file, verbose):
     tax_names = set()
     fh = open(file, "r")
@@ -393,10 +353,10 @@ def read_mammals(file, verbose):
         sys.stderr.write("ok\n")
     return tax_names
 
+
 # ----------------------------------------------------
 # MAIN
 # ----------------------------------------------------
-
 
 # STARTING PROGRAM
 if options.verbose:
@@ -407,19 +367,27 @@ create_directories()
 test_all()
 
 # READ PROBLEM SEQUENCES
+if options.verbose:
+    print_job("READING FASTA FILES")
 query_dict  = fasta_to_dict(options.input,    options.verbose)
 target_dict = fasta_to_dict(options.database, options.verbose)
 
 # READ TAXONOMY FILE
+if options.verbose:
+    print_job("READING TAXONOMY FILE")
 tax_names = read_mammals(options.taxonomy, options.verbose)
 
-# JACKHMMER
-query_dict  = run_jackhmmer(query_dict, target_dict, options.input, options.database)
-
-print_hmm(query_dict)
-
-
-
+# HMMER (JACKHMMER + HMMFETCH)
+if options.verbose:
+    print_job("DOING HMMER SEARCHES")
+query_dict  = run_jackhmmer(
+    query_dict,
+    target_dict,
+    options.input,
+    options.database,
+    options.verbose
+)
+print_hmm(query_dict, options.verbose)
 
 # IF TESTING/TRAINING
 if options.ints is not None:
@@ -429,6 +397,7 @@ if options.ints is not None:
 # ---------------------------------
 
 # PREDICT INTERACTIONS
+print_job("PREDICTING INTERACTIONS")
 i = 1
 for seq in itertools.combinations(query_dict.keys(), 2):
     seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
@@ -457,24 +426,20 @@ for seq in itertools.combinations(query_dict.keys(), 2):
         continue
 
     if len(common_sp) >= options.species:
-        # Print common species seqs to files
         print_seqs_MSA(seq1, seqfile_1, common_sp)
-        exit(0)
-        #print_seqs_MSA(seq2, file_2, subset_sp)
+        print_seqs_MSA(seq2, seqfile_2, common_sp)
 
         hmmer_align(seqfile_1, hmmfile_1)
 
-        # MSA!
-        #do_MSA((file_1, file_2), options.verbose)
 
-        interaction = Mascarpone.Interaction(seq1, seq2)
-        interaction.set_dist_matrix(1, file_1 + ".aln")
-        interaction.set_dist_matrix(2, file_2 + ".aln")
-        i += 1
-        sys.stderr.write(seq1_id + " ")
-        sys.stderr.write(seq2_id + " ")
-        sys.stderr.write(str(interaction.get_corr()) + "\n")
-        sys.stderr.flush()
+        #interaction = Mascarpone.Interaction(seq1, seq2)
+        #interaction.set_dist_matrix(1, file_1 + ".aln")
+        #interaction.set_dist_matrix(2, file_2 + ".aln")
+        #i += 1
+        #sys.stderr.write(seq1_id + " ")
+        #sys.stderr.write(seq2_id + " ")
+        #sys.stderr.write(str(interaction.get_corr()) + "\n")
+        #sys.stderr.flush()
 
-
+print_job("REMOVING TEMP FILES")
 #erase_temp(options.verbose)
