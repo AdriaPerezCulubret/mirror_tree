@@ -238,6 +238,7 @@ def read_interactome(int_file):
     return interactions
 
 # ----------------------------------------------------
+
 def read_jack(file, query_dict, target_dict):
     fh = open(file, "r")
 
@@ -277,6 +278,9 @@ def hmmer_align(seq_file, hmm_file):
     '''
     cmd = 'hmmalign --outformat Stockholm "%s" "%s" | perl -ne \'print uc($_);\' > %s.out' %(hmm_file, seq_file, seq_file)
     os.system(cmd)
+    #fh = open("%s.out" % seq_file, "r")
+    #new = open("%s.clustal" % seq_file, "w")
+    #AlignIO.convert(fh, "stockholm", new, "clustal")
 
 # ----------------------------------------------------
 def hmm_fetch_finder(qname, clean_name):
@@ -414,10 +418,9 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 
 
 
-
         interaction = Mascarpone.Interaction(seq1, seq2)
-        interaction.set_dist_matrix(1, "KK2")
-        #interaction.set_dist_matrix(2, seqfile_2 + ".out")
+        interaction.set_dist_matrix(1, seqfile_1 + ".out")
+        interaction.set_dist_matrix(2, seqfile_2 + ".out")
         i += 1
         sys.stderr.write(seq1.id + " ")
         sys.stderr.write(seq2.id + " ")
