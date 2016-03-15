@@ -3,6 +3,7 @@ from Bio.Seq import Seq
 from Bio.Phylo.TreeConstruction import DistanceCalculator
 from Bio import AlignIO
 import numpy as np
+import scipy.stats as st
 
 class SequenceObj(SeqIO.SeqRecord):
     '''
@@ -51,6 +52,7 @@ class Interaction(object):
         self.seq1 = seq1
         self.seq2 = seq2
         self.correlation = None
+        self.spearman = None
 
     def set_dist_matrix (self, numseq, file):
         aln = AlignIO.read(open(file), 'stockholm')
@@ -91,7 +93,8 @@ class Interaction(object):
             raise Exception("seq2.id matches 100%  with his homologs, distance matrix can't be calculated!")
         elif self.correlation is None:
             self.correlation = np.corrcoef(self.matrix1,self.matrix2)[1,0]
-            return self.correlation
+            self.spearman = st.spearmanr(self.matrix1,self.matrix2)[0]
+            return self.correlation,self.spearman
         else:
             return self.correlation
 
