@@ -49,3 +49,13 @@ wget 'http://mips.helmholtz-muenchen.de/proj/ppi/negatome/manual_stringent.txt'
 mv manual_stringent.txt db/NonInt.tbl
 
 ```
+
+
+
+# sacred perl
+
+```perl
+perl -ne '($a, $b, $r) = split /\s+/; if ($a =~ /human/i and $b =~ /human/i) {chomp; print "$_ NO\n";}' prova_noint.out > OUT_NO.txt
+
+
+```
