@@ -264,8 +264,10 @@ def read_jack(file, query_dict, target_dict):
         cols    = line.split()
         t, q, e = cols[0], cols[2], cols[4]
         if (q, target_dict[t].species) not in already_added_sp:
-            query_dict[q].homologs.append(target_dict[t])
-            already_added_sp.add((q,target_dict[t].species))
+            if query_dict[q].species != target_dict[t].species:
+                # Target species is different from query species
+                query_dict[q].homologs.append(target_dict[t])
+                already_added_sp.add((q,target_dict[t].species))
         else:
             continue
 
@@ -346,11 +348,30 @@ def read_taxonomy(file, verbose):
     return tax_names
 
 # ----------------------------------------------------
-def print_rRNA(common_sp, rnafile):
+def print_rRNA(common_sp, rnafile, filenum, species):
     '''
     Prints rRNA seqs for the common species to do an MSA.
     '''
 
+    align = AlignIO.read(open(rnafile), "stockholm")
+    common = common_sp
+    common.add(species)
+    seqs = list()
+    for record in align:
+        sp = record.id.replace("_", " ")
+        if sp in common:
+            seqs.append(record)
+        else:
+            continue
+
+    if len(seqs) == len(common_sp):
+        outfh = open("tmp/" + str(filenum) + ".sto", "w")
+        seqs = sorted(seqs, key = lambda seq : seq.id.replace("_", " "))
+        SeqIO.write(seqs, outfh, "stockholm")
+        outfh.close()
+        return True
+    else:
+        return False
 
 
 # ----------------------------------------------------
@@ -387,6 +408,7 @@ query_dict  = run_jackhmmer(
     options.verbose
 )
 #print_hmm(query_dict, options.verbose)
+
 
 # IF TESTING/TRAINING
 if options.ints is not None:
@@ -425,19 +447,24 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 
     print_seqs_MSA(seq1, seqfile_1, common_sp)
     print_seqs_MSA(seq2, seqfile_2, common_sp)
-    print_rRNA(common_sp, options.RNA)
+    RNA_check = print_rRNA(common_sp, options.RNA, i, seq1.species)
 
     if options.verbose:
         sys.stderr.write("# Performing MSA for %s\n" % seq1.id )
     hmmer_align(seqfile_1, hmmfile_1)
+    hmmer_align(seqfile_2, hmmfile_2)
 
     interaction = Mascarpone.Interaction(seq1, seq2)
     interaction.set_dist_matrix(1, seqfile_1 + ".out")
     interaction.set_dist_matrix(2, seqfile_2 + ".out")
+
+    if RNA_check is True:
+        interaction.set_dist_matrix(3, "tmp/" + str(i) + ".sto")
+
     i += 1
     sys.stdout.write(seq1.id + " ")
     sys.stdout.write(seq2.id + " ")
-    sys.stdout.write(str(interaction.get_corr()[0]) + " " + str(interaction.get_corr()[1]) + "\n")
+    sys.stdout.write(str(interaction.get_corr()[0]) + " " + str(interaction.get_corr()[1]) + " " + str(interaction.get_corr()[2]) + "\n")
     sys.stdout.flush()
 
 print_job("REMOVING TEMP FILES")
