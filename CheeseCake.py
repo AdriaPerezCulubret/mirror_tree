@@ -367,7 +367,7 @@ query_dict  = run_jackhmmer(
     options.database,
     options.verbose
 )
-print_hmm(query_dict, options.verbose)
+#print_hmm(query_dict, options.verbose)
 
 # IF TESTING/TRAINING
 if options.ints is not None:
@@ -422,10 +422,10 @@ for seq in itertools.combinations(query_dict.keys(), 2):
         interaction.set_dist_matrix(1, seqfile_1 + ".out")
         interaction.set_dist_matrix(2, seqfile_2 + ".out")
         i += 1
-        sys.stderr.write(seq1.id + " ")
-        sys.stderr.write(seq2.id + " ")
-        sys.stderr.write(str(interaction.get_corr()) + "\n")
-        sys.stderr.flush()
+        sys.stdout.write(seq2.id + " ")
+        sys.stdout.write(seq1.id + " ")
+        sys.stdout.write(str(interaction.get_corr()) + "\n")
+        sys.stdout.flush()
 
 print_job("REMOVING TEMP FILES")
 #erase_temp(options.verbose)
