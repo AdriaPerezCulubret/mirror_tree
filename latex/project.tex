@@ -1,0 +1,140 @@
+\documentclass[11pt]{article}
+\renewcommand{\baselinestretch}{1}
+
+% PACKAGES
+%-----------------------
+\usepackage[left=1cm, right=1cm, top=1.5cm, bottom=1.5cm,nohead,nofoot]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subfigure}
+\usepackage[parfill]{parskip}
+
+
+
+% DOC INFO
+%-----------------------
+\title{MirrorTrees: The Alice's Wonderland of Proteomics}
+\author{
+	Sergio Castillo
+	\and
+	Joan Martí
+	\and
+	Adrià Pérez
+}
+\date{Structural Bioinformatics, MSc in Bioinformatics for Health Sciences}
+
+% DOCUMENT
+%-----------------------
+\begin{document}
+\maketitle
+
+\section{Introduction}
+In the so-called OMICS era, with the high-throughput, the amount of data is huge. This is not an exception of proteomics data. Nowadays, exists huge databases for proteins, at distinct levels (inferred, detected, crystallised, etc), however, still there is a gap when concerning the interaction between proteins. This lack of knowledge is rised due to the fact that proteic physic interactions used to be found by experimental means (immunoprecipitations, double-hybtid, etc).
+
+
+Now, there is the opportunity to infer physical interactions \textit{in silico}, and then focus the experimental work to validation.
+
+Exist different algorithms or procedures for infering proteic physical interaction, but in this essay we are going to cover only the MirrorTree approach, developed in early century by Dr. Alfonso Valencia and associates \cite{Pazos2001}.
+
+The MirrorTree is based on co-evolutionary methodology, as MirrorTree assumes that if physical interactions between proteins, they should co-evolve, moreover, they should share similar evolutionary history.
+
+
+\section{Methods}
+\subsection{What is MirrorTree?}
+MirrorTree methodology, developed by Dr. Alfonso Valencia and associates, predicts direct interactions between proteins based on co-evolution of interacting proteins. \cite{Pazos2001}. The work-flow of the MirrorTree is as follows:
+\begin{enumerate}
+\setlength{\itemsep}{1pt}
+	\item Gather \textit{n} sequences to test its interaction.
+	\item Create \textit{n} sets, consisted of orthologous sequences(search by homology, using BLAST \cite{BLAST}).
+	\item Build a MSA for \textit{n} sets.
+	\item Build distance matrix for each set (using McLachlan 71).
+	\item Compare the the distance matrices at 1:1 rate.
+	\item Build a correlation coefficient (Pearson) based on the difference between the matrices.
+	\item Infer interaction.
+\end{enumerate}
+MirrorTree is settled upon the following suppositions:
+\begin{enumerate}
+\setlength{\itemsep}{1pt}
+	\item Proteins that interact directly co-evolve.
+	\item Proteins that interact directly and co-evolve should share the same evolutionary history, so they must have similar phylogenies.
+\end{enumerate}
+In further sections there would be a discussion over these assumptions.
+
+\subsection{Pipeline}
+Our integrative tool takes a slightly different approach to the Valencia's team to MirrorTrees. Our pipeline is as follows:
+\begin{enumerate}
+\setlength{\itemsep}{1pt}
+	\item Gather \textit{n} sequences to test its interaction.
+	\item Create \textit{n} sets, consisted of orthologous sequences(search with a hidden markov model, using jackhmmer \cite{HMMER}).
+	\item Build a MSA for \textit{n} sets (using hmmalign \cite{HMMER}).
+	\item Use the distance matrix for each set provided by jackhmmer \cite{HMMER} (using Blosom62 matrix).
+	\item Compare the the distance matrices at 1:1 rate.
+	\item Partial out the spurious correlation (species-lineage relationship) using the distance matrix of the species tree (18S rRNA) \cite{Sato2005}.	
+	\item Build a correlation coefficient (Pearson's r and Spearman's rho) based on the difference between the matrices.
+
+\end{enumerate}
+
+\subsection{Databases}
+In order to develop the tool, different train/test sets where developed. Here are listed the databases from where we have retrieved the IDs or sequences:
+\begin{enumerate}
+\setlength{\itemsep}{1pt}
+	\item Sequences in FASTA format (Uniprot-Swiss database).
+	\item ID's from proteins that interact (IntAct database \cite{intact}).
+	\item ID's from proteins that do not interact (Negatome database \cite{negatome}).
+	\item Alignments of 18S rRNA for the species tree (SILVA format \cite{SILVA}).
+\end{enumerate}
+
+\section{Discussion}
+Despite being a possible theoretical approach, Valencia's work in 2001\cite{Pazos2001} needs to be improved and analysed. The approach here presented has prominent differences with the reference work. In the following sections there are specified which points needed to be changed and the reasons for doing so.
+
+\subsection{Assumptions}
+One of the main handicaps that exist in MirrorTree approaching is that its assumptions are not always valid.
+\begin{enumerate}
+\setlength{\itemsep}{1pt}
+	\item \textit{Proteins that interact directly co-evolve}: Not necessarily. Interaction between proteins occurs at domain level, more precisely it interacts with the interaction region, a smaller region within the domain, not at the whole protein. It might be true that interaction regions co-evolve, but that does not mean that co-evolve the whole protein. Besides, even the co-evolution between interaction sites is somehow obscure, as it depends on the intensity of the selective pressure between them. It is known that the interaction between proteins is not static, is partially adaptative (key-lock vs greeting-hands). So, would always be relevant an aminoacid exchange? How intense is the selective pressure between the regions?
+	\item \textit{Proteins that interact directly and co-evolve should share the same evolutionary history, so they must have similar phylogenies.}
+\end{enumerate}
+
+\subsection{Search of orthologs}
+One of the main difficulties when working with phylogenies, and by extension to this essay, is the difficulty to distinguish orthologs from paralogs, one of the paradigmatic problems on the filed. 
+
+When retrieving orthologous sequences, paralogous sequences are also retrieved. As they refer to different events of diversification (species vs. gene respectively), there is an introgression of an other relationship within our model, adding confounding relationships, and therefore decreasing the predictive power of the approach.
+
+Besides, proteins, and in special, proteins from multicellular eukaryots, may have many domains. If the aim of the study is to asses direct interaction between proteins, it must focus on the interaction region. Using BLAST-based searches can also lead to misleading homology, as it might search homologous sequences based on a domain which is not related to the interaction.
+
+On the contrary, HMM-based searches look for homologous sequences using an specific domain, which is fetched from the query sequence. Doing so, relationship between proteins, focusing on the interacting domain, can be ensured.
+
+
+\subsection{Weight Matrix}
+The distance matrix can be computed using different weight matrices (p.e. Blosum62, McLachlan71, Dayhoff Pam Matrix, etc) or distance correctors (p.e. Kimura's distance). Despite being a variable in the approach, some authors\cite{Zhou13} have found that its change does not provide an improvement of the prediction power.
+
+This might be true due to that the focus of MirrorTree is to compare between trees (a.k.a distance matrix). The relevant point is to use the same statistic in both MSAs, not in how good or accurate is the estimation of the distances.
+
+\subsection{Correlation measures}
+In Valencia's article\cite{Pazos2001} Pearson's r is used to test the relationship between matrices (which can be interpreted as two-dimensional ordered lists of data). Pearson's r holds its purpose upon two main suppositions:
+\begin{enumerate}
+\setlength{\itemsep}{1pt}
+	\item \textit{It is based on normality, or at least performs way better under normal distribution of the data:} It is not clear that the distances between genes, given a clade follow a normal distribution, so it might be an infraestimation of the intensity of the relationship.
+	\item \textit{It only captures linear relationships:} Exists other kind of relationships: exponential, logarithmic, parabolic, etc. Is the relationship between 2 tree distances always linear?
+	\item \textit{It is sensible to outlayers:} As it tries to fit a line in a cloud of points, the outlayers play a significant role when fitting it, biasing the fitting towards them. The fitting line would not be accurate.
+\end{enumerate}
+As there is uncertainty in these 3 elements, it would be interesting to complement the prediction with Spearman's rho, which is rank-ordered-based (non-parametric), can fit a line or a curve in logarithmic and exponential relationships (but not parabolic, though) and it is more robust to outlayers.
+
+In addition, correlation measures can be more reliable if species-lineage relationship is partialled out\cite{Sato2005}. This species-lineage free relationship can be obtained through correlating the error components obtained from the correlations of a matrix distance from a query sequence and the matrix distance obtained with species-lineage marker, such as 18S rRNA \cite{Sato2005}.
+
+\section{Results}
+
+\bibliographystyle{plain}
+\bibliography{project}	
+\end{document}
