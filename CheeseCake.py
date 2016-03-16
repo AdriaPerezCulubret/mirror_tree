@@ -8,6 +8,7 @@ import re
 import sys
 import time
 import glob
+import gzip
 import socket
 import argparse
 import warnings
@@ -76,6 +77,15 @@ parser.add_argument(
     type     = float,
     default  = 0.5,
     help     = "r cutoff to classify interacting protein pairs."
+)
+
+parser.add_argument(
+    "-R", "--RNA",
+    dest     = "RNA",
+    action   = "store",
+    default  = None,
+    required = True,
+    help     = "FASTA file (gzipped) from Silva with aligned rRNA."
 )
 
 options = parser.parse_args()
@@ -229,12 +239,17 @@ def read_interactome(int_file):
     interactions = set()
     intis = open(int_file, "r")
     next(intis) # Skip first line
+    exp = re.compile('(uniprotkb:)?(.+)')
     for line in intis:
         lista = line.split("\t")
-        lista[0] = lista[0].split(":")[1]
-        lista[1] = lista[1].split(":")[1]
-        interactions.add((lista[0],lista[1]))
-        interactions.add((lista[1],lista[0]))
+        try:
+            matchA = exp.search(lista[0]).groups()[1]
+            matchB = exp.search(lista[1]).groups()[1]
+            interactions.add((matchA,matchB))
+            interactions.add((matchB,matchA))
+        except:
+            continue
+
     return interactions
 
 # ----------------------------------------------------
@@ -263,7 +278,7 @@ def run_jackhmmer(query_dict, target_dict, query, target, verbose):
     if verbose:
         sys.stderr.write("# Performing jackhmmer search...")
         sys.stderr.flush()
-    os.system("jackhmmer -E 1e-5 -N 3 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
+    #os.system("jackhmmer -E 1e-5 -N 3 --tblout tmp/jackhmmer.tbl --chkhmm tmp/chkhmm %s %s > /dev/null" % (query, target))
     query_dict = read_jack("tmp/jackhmmer.tbl", query_dict, target_dict)
     if verbose:
         sys.stderr.write("ok\n")
@@ -278,9 +293,6 @@ def hmmer_align(seq_file, hmm_file):
     '''
     cmd = 'hmmalign --outformat Stockholm "%s" "%s" | perl -ne \'print uc($_);\' > %s.out' %(hmm_file, seq_file, seq_file)
     os.system(cmd)
-    #fh = open("%s.out" % seq_file, "r")
-    #new = open("%s.clustal" % seq_file, "w")
-    #AlignIO.convert(fh, "stockholm", new, "clustal")
 
 # ----------------------------------------------------
 def hmm_fetch_finder(qname, clean_name):
@@ -333,6 +345,13 @@ def read_taxonomy(file, verbose):
         sys.stderr.write("ok\n")
     return tax_names
 
+# ----------------------------------------------------
+def print_rRNA(common_sp, rnafile):
+    '''
+    Prints rRNA seqs for the common species to do an MSA.
+    '''
+
+
 
 # ----------------------------------------------------
 # MAIN
@@ -343,7 +362,7 @@ if options.verbose:
     print_start_rep()
 create_directories()
 
-# TESTTING INSTALLED PROGRAMS
+# TESTING INSTALLED PROGRAMS
 test_all()
 
 # READ PROBLEM SEQUENCES
@@ -406,6 +425,7 @@ for seq in itertools.combinations(query_dict.keys(), 2):
 
     print_seqs_MSA(seq1, seqfile_1, common_sp)
     print_seqs_MSA(seq2, seqfile_2, common_sp)
+    print_rRNA(common_sp, options.RNA)
 
     if options.verbose:
         sys.stderr.write("# Performing MSA for %s\n" % seq1.id )
