@@ -96,7 +96,7 @@ class Interaction(object):
             self.spearman = st.spearmanr(self.matrix1,self.matrix2)[0]
             return self.correlation,self.spearman
         else:
-            return self.correlation
+            return self.correlation, self.spearman
 
 class ProgramNotFound(Exception):
     def __init__(self, program):
