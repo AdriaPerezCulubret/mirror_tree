@@ -59,3 +59,11 @@ perl -ne '($a, $b, $r) = split /\s+/; if ($a =~ /human/i and $b =~ /human/i) {ch
 
 
 ```
+
+#  --> 16S rRNA
+
+```sh
+
+wget 'http://www.arb-silva.de/fileadmin/silva_databases/release_123/Exports/SILVA_123_LSURef_tax_silva_full_align_trunc.fasta.gz'
+
+```

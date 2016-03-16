@@ -431,10 +431,6 @@ for seq in itertools.combinations(query_dict.keys(), 2):
         sys.stderr.write("# Performing MSA for %s\n" % seq1.id )
     hmmer_align(seqfile_1, hmmfile_1)
 
-    if options.verbose:
-        sys.stderr.write("# Performing MSA for %s\n" % seq2.id )
-    hmmer_align(seqfile_2, hmmfile_2)
-
     interaction = Mascarpone.Interaction(seq1, seq2)
     interaction.set_dist_matrix(1, seqfile_1 + ".out")
     interaction.set_dist_matrix(2, seqfile_2 + ".out")
