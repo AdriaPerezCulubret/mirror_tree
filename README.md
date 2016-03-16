@@ -60,10 +60,10 @@ perl -ne '($a, $b, $r) = split /\s+/; if ($a =~ /human/i and $b =~ /human/i) {ch
 
 ```
 
-# Silvia db --> 16S rRNA
+#  --> 16S rRNA
 
 ```sh
 
-wget 'http://www.arb-silva.de/fileadmin/arb_web_db/release_123/ARB_files/SSURef_NR99_123_SILVA_12_07_15_opt.arb.tgz'
+wget 'http://www.arb-silva.de/fileadmin/silva_databases/release_123/Exports/SILVA_123_LSURef_tax_silva_full_align_trunc.fasta.gz'
 
 ```
