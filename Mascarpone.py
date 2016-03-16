@@ -56,7 +56,7 @@ class Interaction(object):
 
     def set_dist_matrix (self, numseq, file):
         aln = AlignIO.read(open(file), 'stockholm')
-        calculator = DistanceCalculator('blosum62')
+        calculator = DistanceCalculator('identity')
 
         dist_matrix = calculator.get_distance(aln)
         i=0
@@ -65,7 +65,7 @@ class Interaction(object):
         for row in dist_matrix:
             j=0
             for column in row:
-                if i<j:          # with this, you take out the 0's so n = (N-N)/2
+                if i<j:          # with this, you take out the 0's so n = (Nsquare-N)/2
                     #print (dist_matrix[i,j])
                     matrix_list.append(dist_matrix[i,j])
                 j+=1
@@ -96,7 +96,11 @@ class Interaction(object):
             self.spearman = st.spearmanr(self.matrix1,self.matrix2)[0]
             return self.correlation,self.spearman
         else:
-            return self.correlation
+            return self.correlation,self.spearman
+
+    def function():
+        pass
+
 
 class ProgramNotFound(Exception):
     def __init__(self, program):
