@@ -10,6 +10,7 @@
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{listings}
 \usepackage{graphicx}
+\graphicspath{{plots/}}
 \usepackage{float}
 \usepackage{wrapfig}
 \usepackage{caption}
@@ -80,7 +81,6 @@ Our integrative tool takes a slightly different approach to the Valencia's team 
 	\begin{enumerate}
 	\setlength{\itemsep}{1pt}
 		\item uniprot database.
-		\item pfam database.
 		\item Alignment of 18S rRNA sequences of the species that are used in .AFA format (already provided by animal taxon).
 	\end{enumerate}
 	\item Look for orthologous sequences for each query sequence (search with a hidden markov model, using jackhmmer \cite{HMMER}).
@@ -164,10 +164,10 @@ In addition, in Valencia's article\cite{Pazos2001} 3 datasets are used:
 The results of the set1 (domains) is highly controversial, as it predicts better the co-evolution between domains of the same protein (logic if within protein selective pressure is taken into account) than between interacting domains. As previously mentioned, maybe the selective pressure, and thus the co-evolution is laxer in interacting domains than in within protein domains. Therefore, is co-evolution a good measure of selective pressure in protein interaction?
 In set2, it seems to be possible to properly classify the interactions (despite counting with ambiguous classification \textit{possible}). In set 3 the situation is analogous to set2.
 
-\textbf{\textbf{It seems, comparing the results of Zhou's article and Valencia's, that the further distances exists between the species, the better appear the results. Maybe the higher the evolutive distance is, the more inflated correlations are.}} ?????????????????'
-
 
 \section{Results}
+\includegraphics{partial_corr}
+
 \subsection{Mutual information}
 
 \bibliographystyle{plain}
