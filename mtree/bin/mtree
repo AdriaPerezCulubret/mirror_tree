@@ -469,6 +469,7 @@ def write_html_graph(interactions, data, gfile, cutoff):
 
     if not real_ints:
         sys.stderr.write("# Can't create html graph: No interactions found.\n")
+        return
     # Json with graph data
     json = create_json(real_ints)
 
