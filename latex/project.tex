@@ -94,15 +94,25 @@ Our integrative tool takes a slightly different approach to the Valencia's team 
 	\item Create interactome (graph).
 \end{enumerate}
 
-\subsection{Databases}
-In order to develop the tool, different train/test sets where developed. Here are listed the databases from where we have retrieved the IDs or sequences: EXPLAIN
-\begin{enumerate}
-\setlength{\itemsep}{1pt}
-	\item Sequences in FASTA format (Uniprot-Swiss database).
-	\item ID's from proteins that interact (IntAct database \cite{intact}).
-	\item ID's from proteins that do not interact (Negatome database \cite{negatome}).
-	\item Alignments of 18S rRNA for the species tree (SILVA format \cite{SILVA}).
-\end{enumerate}
+\subsection{Evaluation}
+In order to develop the tool, different train/test sets where developed. For doing so, it is important to know beforehand the relationship between proteins.
+
+IntAct database\cite{intact} is a curated database (from Grid database) for known interactions between proteins. Downloading the dataset (2012-10-16 release) in MITAB27 format (extension from PSI-MI format).
+
+Negatome database\cite{negatome} is a curated database for proteins that do not interact under experimental conditions. It has its own tabular format. For ensuring its reliability, the most stringent dataset was download (\textit{manual_stringent.txt} 2014 release), which is manually curated and filtered against IntAct information.
+
+The sequences where retrieved by Uniprot ID from the local Uniprot database (previously downloaded in FASTA format and filtered). 
+
+Both datasets are useful for assessing known interactions (IntAct) and known non-interactions (Negatome), and therefore, checking the predictions and calculation the precision and recall.
+
+Also where needed the alignments of 18S rRNA of the species used in the previous steps to produce the species matrix of distance (used for computing the partial correlations). The align sequences in AFA format (Aligned FAsta) are retrieved from SILVA database\cite{SILVA} (release 123), using the full alignment (but truncated by the aligned region).
+
+Interacting and non-interacting sequences where filtered by the species contained in the alignment from SILVA, as well as the local Uniprot database, for speeding mtree performance.
+
+Once the set with interacting and non-interacting sequences is created, mtree can be installed and run.
+
+The output of mtree consist of an HTML with a graph, representing the interactions of the input file, and a tabular file where the query sequence, the target sequence, Pearson's r, Spearman's rho, partial correlation coeficient and type (Int vs NonInt) is printed, for each analysed pair. Then, its label (type) is checked using the precedence of the sequence.
+
 
 \section{Discussion}
 Despite being a possible theoretical approach, Valencia's work in 2001\cite{Pazos2001} needs to be improved and analysed. The approach here presented has prominent differences with the reference work. In the following sections there are specified which points needed to be changed and the reasons for doing so.
