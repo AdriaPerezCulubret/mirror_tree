@@ -40,27 +40,27 @@
 \maketitle
 
 \section{Introduction}
-In the so-called OMICS era, with the high-throughput techniques, the amount of data is huge. This is not an exception of proteomics data. Nowadays, huge databases for proteins exist, at distinct levels (inferred, detected, crystallised, etc). However, there is still a gap concerning the interaction between proteins. This lack of knowledge is due to the fact that proteic physic interactions used to be found by experimental means (immunoprecipitations, double-hybrid, etc).
+In the so-called OMICS era, with the high-throughput techniques, the amount of data is huge. This is not an exception with proteomics data. Nowadays, huge databases for proteins exist, at distinct levels (inferred, detected, crystallised, etc). However, there is still a gap concerning the interaction between proteins. This lack of knowledge is due to the fact that proteic physic interactions used to be found by experimental means (immunoprecipitations, double-hybrid, etc).
 
 
 Now, there is an opportunity to infer physical interactions \textit{in silico}, and then focus the experimental work to validation.
 
 There are different algorithms or procedures for inferring proteic physical interactions, but in this essay we are going to cover only the MirrorTree approach, developed in early century by Dr. Alfonso Valencia and associates \cite{Pazos2001}.
 
-The MirrorTree is based on co-evolutionary methodology, as MirrorTree assumes that if a physical interaction exists between two proteins, they should co-evolve and moreover, they should share similar evolutionary history.
+The MirrorTree technique is based on co-evolutionary methodology, as MirrorTree assumes that if a physical interaction exists between two proteins, they should co-evolve and moreover, they should share similar evolutionary history.
 
 
 \section{Methods}
-\subsection{What is MirrorTree?}
-MirrorTree methodology, developed by Dr. Alfonso Valencia and associates, predicts direct interactions between proteins based on co-evolution of interacting proteins. \cite{Pazos2001}. The work-flow of the MirrorTree is as follows:
+\subsection{Using mirror trees to infer interactions}
+The MirrorTree methodology, developed by Dr. Alfonso Valencia and associates, predicts direct interactions between proteins based on co-evolution of interacting proteins. \cite{Pazos2001}. The work-flow of the MirrorTree is as follows:
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
 	\item Gather \textit{n} sequences to test its interaction.
-	\item Look for the orthologous sequences for each query protein query (search by homology, using BLAST \cite{BLAST}).
-	\item Build a MSA for each protein query.
+	\item Look for the orthologous sequences for each protein query (search by homology, using BLAST \cite{BLAST}).
+	\item Build an MSA for each protein query.
 	\item Build distance matrix for each set (using McLachlan71).
-	\item Compare the the distance matrices at 1:1 rate.
-	\item Build a correlation coefficient (Pearson's r) based on the difference between the matrices.
+	\item Compare the distance matrices at 1:1 rate.
+	\item Compute a correlation coefficient (Pearson's r) based on the difference between the matrices.
 	\item Infer interaction.
 \end{enumerate}
 MirrorTree is settled upon the following suppositions:
@@ -71,26 +71,25 @@ MirrorTree is settled upon the following suppositions:
 \end{enumerate}
 In further sections there would be a discussion over these assumptions.
 
-\subsection{Pipeline}
-Our integrative tool takes a slightly different approach to the Valencia's team to MirrorTrees. Our pipeline is as follows:
+\subsection{mtree}
+Our integrative tool (\texttt{mtree}) takes a slightly different approach to the Valencia's team to MirrorTrees. Our pipeline is as follows:
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
-	\item Gather \textit{n} sequences to test its interaction in .FASTA format.
+	\item Gather \textit{n} sequences to test its interaction in FASTA format.
 	\item Download the needed databases/files:
 	\begin{enumerate}
 	\setlength{\itemsep}{1pt}
 		\item uniprot database.
-		\item pfam database.
-		\item Alignment of 18S rRNA sequences of the species that are used in .AFA format (already provided by animal taxon).
+		\item Alignment of 18S rRNA sequences of the species that are used in AFA format (already provided by animal taxon).
 	\end{enumerate}
-	\item Look for orthologous sequences for each query sequence (search with a hidden markov model, using jackhmmer \cite{HMMER}).
-	\item Build a MSA for each query sequence and their putative orthologs (using hmmalign \cite{HMMER}).
-	\item Use the distance matrix for each set provided by jackhmmer at the last iteration \cite{HMMER} (using Blosom62 matrix).
+	\item Look for orthologous sequences for each query sequence (search with  hidden markov models, using jackhmmer \cite{HMMER}).
+	\item Build an MSA for each query sequence and their putative orthologs (using hmmalign \cite{HMMER}).
+	\item Use the distance matrix for each set provided by jackhmmer at the last iteration \cite{HMMER} (using Blosum62 matrix).
 	\item Compare the the distance matrices between the query sequences.
 	\item Partial out the spurious correlation (species-lineage relationship) using the distance matrix of the species tree (18S rRNA) \cite{Sato2005}.	
 	\item Build a correlation coefficient (Pearson's r, Spearman's rho and partial correlations) based on the difference between the matrices.
 	\item Infer interaction.
-	\item Create interactome (graph).
+	\item Create an interactome (graph).
 \end{enumerate}
 
 \subsection{Databases}
@@ -102,6 +101,10 @@ In order to develop the tool, different train/test sets where developed. Here ar
 	\item ID's from proteins that do not interact (Negatome database \cite{negatome}).
 	\item Alignments of 18S rRNA for the species tree (SILVA format \cite{SILVA}).
 \end{enumerate}
+
+
+\section{Results}
+\subsection{Mutual information}
 
 \section{Discussion}
 Despite being a possible theoretical approach, Valencia's work in 2001\cite{Pazos2001} needs to be improved and analysed. The approach here presented has prominent differences with the reference work. In the following sections there are specified which points needed to be changed and the reasons for doing so.
@@ -167,8 +170,6 @@ In set2, it seems to be possible to properly classify the interactions (despite 
 \textbf{\textbf{It seems, comparing the results of Zhou's article and Valencia's, that the further distances exists between the species, the better appear the results. Maybe the higher the evolutive distance is, the more inflated correlations are.}} ?????????????????'
 
 
-\section{Results}
-\subsection{Mutual information}
 
 \bibliographystyle{plain}
 \bibliography{project}	
