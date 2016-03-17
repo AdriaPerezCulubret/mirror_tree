@@ -5,13 +5,36 @@ from Bio import AlignIO
 import scipy.stats as st
 from Bio.Phylo.TreeConstruction import DistanceCalculator
 
+'''
+Exception thrown when a program needed by CheeseCake is not installed.
+'''
+class ProgramNotFound(Exception):
+    def __init__(self, program):
+        self.program = program
+
+    def __str__(self):
+        return "The program %s was not found in your system" % self.program
+
+
+'''
+Exception thrown when matrices are not defined for Interaction object
+'''
+class MatrixNotDefined(Exception):
+    def __init__(self, matrixname):
+        self.matrix = matrixname
+
+    def __str__(self):
+        return "%s not defined. Use method set_dist_matrix() before get_corr()." % self.matrix
+
+
+'''
+This is a SeqRecord child class with species information.
+    species    : The species of the sequence
+    homologs   : Dictionary with SequenceObj objects
+    homolog_sp : Set with the species of all the homologs of this Sequence
+'''
 class SequenceObj(SeqIO.SeqRecord):
-    '''
-    This is a SeqRecord child class with species information.
-        species    : The species of the sequence
-        homologs   : Dictionary with SequenceObj objects
-        homolog_sp : Set with the species of all the homologs of this Sequence
-    '''
+
     def __init__(self, identifier, seq, name, species, description, dbxrefs, features, annotations, letter_annotations):
         super(SequenceObj, self).__init__(
             id = identifier,
@@ -28,10 +51,11 @@ class SequenceObj(SeqIO.SeqRecord):
         self.hmm          = None
         self.__homolog_sp = None
 
+    '''
+    This returns a set with the species of all the homologs of this protein
+    '''
     def get_homolog_species(self):
-        '''
-        This returns a set with the species of all the homologs of this progein
-        '''
+
         if self.__homolog_sp is None:
             self.__homolog_sp = set()
             for homo_seq in self.homologs:
@@ -40,20 +64,22 @@ class SequenceObj(SeqIO.SeqRecord):
         else:
             return self.__homolog_sp
 
+'''
+This distance calculator allows more letters (Y, N etc. for DNA, RNA etc.)
+'''
 class Distance_Calculator_Improved(DistanceCalculator):
-    '''
-    This distance calculator allows more letters (Y, N etc. for DNA, RNA etc.)
-    '''
+
     def __init__(self,model="identity"):
         super(Distance_Calculator_Improved, self).__init__(model)
 
+    '''
+    Calculate pairwise distance from two sequences.
+    Returns a value between 0 (identical sequences) and 1 (completely
+    different, or seq1 is an empty string.)
+    We reimplemented it so we could allow IUPAC codes for RNA in the alignments.
+    '''
     def _pairwise(self, seq1, seq2):
-        '''
-        Calculate pairwise distance from two sequences.
 
-        Returns a value between 0 (identical sequences) and 1 (completely
-        different, or seq1 is an empty string.)
-        '''
         score = 0
         max_score = 0
         if self.scoring_matrix:
@@ -90,11 +116,12 @@ class Distance_Calculator_Improved(DistanceCalculator):
         return 1 - (score * 1.0 / max_score)
 
 
-
+'''
+This is the interaction Object. It has all the attributes/features related with it.
+To get the correlation coefficients, you should use the method get_corr, which returns
+a tuple of the form: (pearson, spearman, partial)
+'''
 class Interaction(object):
-    '''
-    This is the interaction Object. It has all the attributes/features related with it.
-    '''
 
     def __init__(self, seq1, seq2):
         self.matrix1 = list()
@@ -102,13 +129,14 @@ class Interaction(object):
         self.seq1 = seq1
         self.seq2 = seq2
         self.sp_matrix   = None
-        self.correlation = None
-        self.spearman    = None
+        self.__pearson   = None
+        self.__spearman  = None
+        self.__partial_r = None
 
+    '''
+    Transforms a distance matrix to a list.
+    '''
     def __matrix_to_list(self,dist_matrix):
-        '''
-        Transforms a distance matrix to a list.
-        '''
         matrix_list = list()
         i=0
         j=0
@@ -121,10 +149,10 @@ class Interaction(object):
             i+=1
         return matrix_list
 
+    '''
+    Linear regression that returns the residuals
+    '''
     def __linear_reg_residues(self, x, y):
-        '''
-        Linear regression that returns the residuals
-        '''
         residuals = list()
         A    = np.vstack([x, np.ones(len(x))]).T
         slope, intercept = np.linalg.lstsq(A, y)[0]
@@ -132,13 +160,16 @@ class Interaction(object):
             predict = slope * num + intercept
             res     = y[idx] - predict
             residuals.append(res)
-        residuals = np.append(residuals, residuals)
         return residuals
 
+    '''
+    Sets the distance matrix for the "numseq" sequence using a Stockholm file.
+        numseq can be:
+            1 => Sequence 1
+            2 => Sequence 2
+            3 => rRNA (sp_matrix)
+    '''
     def set_dist_matrix (self, numseq, file):
-        '''
-        Sets the distance matrix for the "numseq" sequence.
-        '''
         aln = AlignIO.read(open(file), 'stockholm')
         calculator = None
         if numseq == 3:
@@ -147,32 +178,26 @@ class Interaction(object):
             calculator = DistanceCalculator('blosum62')
 
         dist_matrix = calculator.get_distance(aln)
-
         matrix_list = self.__matrix_to_list(dist_matrix)
 
         if numseq == 1:
             self.matrix1 = matrix_list
-            print(len(self.matrix1))
             if self.matrix1.count(0.0) == len(self.matrix1):
                 self.matrix1 = "zero"
         elif numseq == 2:
             self.matrix2 = matrix_list
-            print(len(self.matrix2))
             if self.matrix2.count(0.0) == len(self.matrix2):
                 self.matrix2 = "zero"
         elif numseq == 3:
             self.sp_matrix = matrix_list
-            #print(dist_matrix)
-            print (len(self.sp_matrix))
         else:
-            raise Exception ("numseq must be either 1 or 2!")
+            raise Exception ("numseq must be either 1, 2 or 3!")
 
-
+    '''
+    Computes partial correlation between "matrix1" and "matrix2"
+    partialing out "sp_matrix"
+    '''
     def partial_corr(self):
-        '''
-        Computes partial correlation between "matrix1" and "matrix2"
-        partialing out "sp_matrix"
-        '''
         if self.sp_matrix is not None:
             res1    = self.__linear_reg_residues(self.matrix1, self.sp_matrix)
             res2    = self.__linear_reg_residues(self.matrix2, self.sp_matrix)
@@ -181,32 +206,24 @@ class Interaction(object):
         else:
             return "NA"
 
-
+    '''
+    Computes and/or returns all the possible correlation coefficients for this Interaction.
+    '''
     def get_corr (self):
-        '''
-        Computes and returns all the possible correlation coefficients for this Interaction.
-        '''
-        if not self.matrix1 or not self.matrix2:
-            raise Exception ("Distance matrix not calculated")
+        if self.matrix1 is None:
+            raise MatrixNotDefined("matrix1")
+        elif self.matrix2 is None:
+            raise MatrixNotDefined("matrix2")
+        elif self.sp_matrix is None:
+            raise MatrixNotDefined("sp_matrix")
         elif self.matrix1 == "zero":
-            raise Exception ("seq1.id matches 100%  with his homologs, distance matrix can't be calculated!")
+            raise Exception("seq1.id matches 100%  with his homologs, distance matrix can't be calculated!")
         elif self.matrix2 =="zero":
             raise Exception("seq2.id matches 100%  with his homologs, distance matrix can't be calculated!")
-        elif self.correlation is None:
-            self.correlation = np.corrcoef(self.matrix1,self.matrix2)[1,0]
-            self.spearman    = st.spearmanr(self.matrix1,self.matrix2)[0]
-            self.partial_r   = self.partial_corr()
-            return self.correlation, self.spearman, self.partial_r
+        elif self.__pearson is None:
+            self.__pearson     = np.corrcoef(self.matrix1,self.matrix2)[1,0]
+            self.__spearman    = st.spearmanr(self.matrix1,self.matrix2)[0]
+            self.__partial_r   = self.partial_corr()
+            return self.__pearson, self.__spearman, self.__partial_r
         else:
-            return self.correlation, self.spearman, self.partial_r
-
-
-class ProgramNotFound(Exception):
-    '''
-    Exception thrown when a program needed by CheeseCake is not installed.
-    '''
-    def __init__(self, program):
-        self.program = program
-
-    def __str__(self):
-        return "The program %s was not found in your system" %self.program
+            return self.__pearson, self.__spearman, self.__partial_r
