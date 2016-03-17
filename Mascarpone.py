@@ -227,4 +227,3 @@ class Interaction(object):
             return self.__pearson, self.__spearman, self.__partial_r
         else:
             return self.__pearson, self.__spearman, self.__partial_r
-
