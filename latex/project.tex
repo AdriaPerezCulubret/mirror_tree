@@ -103,7 +103,7 @@ One of the main handicaps that exist in MirrorTree approaching is that its assum
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
 	\item \textit{Proteins that interact directly co-evolve}: Not necessarily. Interaction between proteins occurs at domain level, more precisely it interacts with the interaction region, a smaller region within the domain, not at the whole protein. It might be true that interaction regions co-evolve, but that does not mean that co-evolve the whole protein. Besides, even the co-evolution between interaction sites is somehow obscure, as it depends on the intensity of the selective pressure between them. It is known that the interaction between proteins is not static, is partially adaptative (key-lock vs greeting-hands). So, would always be relevant an aminoacid exchange? How intense is the selective pressure between the regions?
-	\item \textit{Proteins that interact directly and co-evolve should share the same evolutionary history, so they must have similar phylogenies.}
+	\item \textit{Proteins that interact directly and co-evolve should share the same evolutionary history, so they may have similar phylogenies.} This is a strong assumption, as it would be commented in following sections, co-evolution relies upon strong selective pressure in order to be fully detected. In order to have coincident phylogenies, there should be a fairly strong selection between interactors. The problem raises as this is not a frequent.
 \end{enumerate}
 
 \subsection{Search of orthologs}
@@ -122,18 +122,43 @@ The distance matrix can be computed using different weight matrices (p.e. Blosum
 This might be true due to that the focus of MirrorTree is to compare between trees (a.k.a distance matrix). The relevant point is to use the same statistic in both MSAs, not in how good or accurate is the estimation of the distances.
 
 \subsection{Correlation measures}
-In Valencia's article\cite{Pazos2001} Pearson's r is used to test the relationship between matrices (which can be interpreted as two-dimensional ordered lists of data). Pearson's r holds its purpose upon two main suppositions:
+Searching on the main bibliography of the topic, 3 measures of correlation are used:
+
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
-	\item \textit{It is based on normality, or at least performs way better under normal distribution of the data:} It is not clear that the distances between genes, given a clade follow a normal distribution, so it might be an infraestimation of the intensity of the relationship.
-	\item \textit{It only captures linear relationships:} Exists other kind of relationships: exponential, logarithmic, parabolic, etc. Is the relationship between 2 tree distances always linear?
-	\item \textit{It is sensible to outlayers:} As it tries to fit a line in a cloud of points, the outlayers play a significant role when fitting it, biasing the fitting towards them. The fitting line would not be accurate.
+	\item \textit{Pearson's r}\cite{Pazos2001}.
+	\item \textit{Spearman's rho:} As maybe the relationship between matrices is not linear, or it may have outlayers that alter the fitting of the linear model, it could be of help to see how it behaves a rank-based correlation.
+	\item \textit{Partial correlation (using 18S rRNA phylogeny of the species):}\cite{Sato2005} When performing correlation between matrices, exist a common relationship that need to be taken into account, the phylogeny of the species used in the trees. For building the phylogeny a lineage-specific marker is needed. Usually is recommended to use the 18S rRNA for these purpose\cite{Sato2005}. It would be interesting to see how the correlation changes.
 \end{enumerate}
-As there is uncertainty in these 3 elements, it would be interesting to complement the prediction with Spearman's rho, which is rank-ordered-based (non-parametric), can fit a line or a curve in logarithmic and exponential relationships (but not parabolic, though) and it is more robust to outlayers.
 
-In addition, correlation measures can be more reliable if species-lineage relationship is partialled out\cite{Sato2005}. This species-lineage free relationship can be obtained through correlating the error components obtained from the correlations of a matrix distance from a query sequence and the matrix distance obtained with species-lineage marker, such as 18S rRNA \cite{Sato2005}.
+In order to see which of them provided a better classification for interactions between proteins, all three statistics where build.
+
+\subsection{Reproducibility}
+One of the reported problems about the MirrorTree approach is the reproducibility. Above all, the goodness of the results depend on the chosen dataset. As observed in Zhou's work\cite{Zhou13}, 3 different sets, with reasonable resemblance between them:
+\begin{enumerate}
+\setlength{\itemsep}{1pt}
+	\item \textit{Set1:} Common interactors of \textit{Saccharomyces cerevisiae} and \textit{Homo sapiens}, with both cases experimentally confirmed their interaction.
+	\item \textit{Set2}: Analogous but pairs only need to be experimentally confirmed in one of the two species.
+	\item \textit{Set3}: Analogous to set1 but using common interactors of \textit{Mus musculus} and   \textit{Homo sapiens}).
+\end{enumerate}
+Only certain degree of differences between interacting pairs and non-interacting pairs can be seen in set1. Set2, a more stringent subset of set1, does not show any difference between both groups, and set3, which is analogous to set1 but using more evolutionary closed species, neither show it.
+
+In addition, in Valencia's article\cite{Pazos2001} 3 datasets are used:
+\begin{enumerate}
+\setlength{\itemsep}{1pt}
+	\item \textit{Set1:} Interacting Domains.
+	\item \textit{Set2:} Interacting Proteins of bacteria.
+	\item \textit{Set2:} Interacting Proteins by genome.
+\end{enumerate}
+The results of the set1 (domains) is highly controversial, as it predicts better the co-evolution between domains of the same protein (logic if within protein selective pressure is taken into account) than between interacting domains. As previously mentioned, maybe the selective pressure, and thus the co-evolution is laxer in interacting domains than in within protein domains. Therefore, is co-evolution a good measure of selective pressure in protein interaction?
+In set2, it seems to be possible to properly classify the interactions (despite counting with ambiguous classification \textit{possible}). In set 3 the situation is analogous to set2.
+
+\textbf{
+\textbf{It seems, comparing the results of Zhou's article and Valencia's, that the further distances exists between the species, the better appear the results. Maybe the higher the evolutive distance is, the more inflated correlations are.}} ?????????????????'
+
 
 \section{Results}
+\subsection{Mutual information}
 
 \bibliographystyle{plain}
 \bibliography{project}	

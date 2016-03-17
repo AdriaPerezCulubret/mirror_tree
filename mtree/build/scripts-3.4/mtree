@@ -13,7 +13,7 @@ import argparse
 import warnings
 import itertools
 import subprocess
-import Mascarpone
+import mirror_tree
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio import AlignIO
