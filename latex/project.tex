@@ -7,7 +7,6 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
-\usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{listings}
 \usepackage{graphicx}
 \graphicspath{{plots/}}
@@ -40,7 +39,7 @@
 \begin{document}
 \maketitle
 
-\section{Introduction}
+\section{MirrorTree approach}
 In the so-called OMICS era, with the high-throughput techniques, the amount of data is huge. This is not an exception of proteomics data. Nowadays, huge databases for proteins exist, at distinct levels (inferred, detected, crystallised, etc). However, there is still a gap concerning the interaction between proteins. This lack of knowledge is due to the fact that proteic physic interactions used to be found by experimental means (immunoprecipitations, double-hybrid, etc).
 
 
@@ -48,12 +47,14 @@ Now, there is an opportunity to infer physical interactions \textit{in silico}, 
 
 There are different algorithms or procedures for inferring proteic physical interactions, but in this essay we are going to cover only the MirrorTree approach, developed in early century by Dr. Alfonso Valencia and associates \cite{Pazos2001}.
 
-The MirrorTree is based on co-evolutionary methodology, as MirrorTree assumes that if a physical interaction exists between two proteins, they should co-evolve and moreover, they should share similar evolutionary history.
+
+MirrorTree approach is based on co-evolutionary methodology, as MirrorTree assumes that if physical interactions between proteins, they should co-evolve, moreover, they should share similar evolutionary history.
+
 
 
 \section{Methods}
-\subsection{What is MirrorTree?}
-MirrorTree methodology, developed by Dr. Alfonso Valencia and associates, predicts direct interactions between proteins based on co-evolution of interacting proteins. \cite{Pazos2001}. The work-flow of the MirrorTree is as follows:
+\subsection{mtree}
+MirrorTree methodology, developed by Dr. Alfonso Valencia and associates, predicts direct interactions between proteins based on co-evolution of interacting proteins. \cite{Pazos2001}. The work-flow of the MirrorTree is as follows: EXPLAIN
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
 	\item Gather \textit{n} sequences to test its interaction.
@@ -72,7 +73,7 @@ MirrorTree is settled upon the following suppositions:
 \end{enumerate}
 In further sections there would be a discussion over these assumptions.
 
-\subsection{Pipeline}
+\subsection{mtree}
 Our integrative tool takes a slightly different approach to the Valencia's team to MirrorTrees. Our pipeline is as follows:
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
@@ -94,7 +95,7 @@ Our integrative tool takes a slightly different approach to the Valencia's team 
 \end{enumerate}
 
 \subsection{Databases}
-In order to develop the tool, different train/test sets where developed. Here are listed the databases from where we have retrieved the IDs or sequences:
+In order to develop the tool, different train/test sets where developed. Here are listed the databases from where we have retrieved the IDs or sequences: EXPLAIN
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
 	\item Sequences in FASTA format (Uniprot-Swiss database).
@@ -166,9 +167,10 @@ In set2, it seems to be possible to properly classify the interactions (despite 
 
 
 \section{Results}
+\subsection{Mutual information}
+\subsection{Data}
 \includegraphics{partial_corr}
 
-\subsection{Mutual information}
 
 \bibliographystyle{plain}
 \bibliography{project}	
