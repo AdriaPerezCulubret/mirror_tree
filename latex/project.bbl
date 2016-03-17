@@ -1,0 +1,57 @@
+\begin{thebibliography}{1}
+
+\bibitem{BLAST}
+Stephen~F. Altschul, Warren Gish, Webb Miller, Eugene~W. Myers, and David~J.
+  Lipman.
+\newblock Basic local alignment search tool.
+\newblock {\em Journal of Molecular Biology}, 215(3):403 -- 410, 1990.
+
+\bibitem{intact}
+Henning Hermjakob, Luisa Montecchi-Palazzi, Chris Lewington, Sugath Mudali,
+  Samuel Kerrien, Sandra~E. Orchard, Martin Vingron, Bernd Roechert, Peter
+  Roepstorff, Alfonso Valencia, Hanah Margalit, John Armstrong, Amos Bairoch,
+  Gianni Cesareni, David~James Sherman, and Rolf Apweiler.
+\newblock Intact: an open source molecular interaction database.
+\newblock {\em Nucleic Acids Research}, 32(Database-Issue):452--455, 2004.
+
+\bibitem{HMMER}
+L.~Steven Johnson, Sean~R. Eddy, and Elon Portugaly.
+\newblock {Hidden Markov model speed heuristic and iterative HMM search
+  procedure.}
+\newblock {\em BMC bioinformatics}, 11(1):431+, 2010.
+
+\bibitem{Pazos2001}
+Florencio Pazos and Alfonso Valencia.
+\newblock Similarity of phylogenetic trees as indicator of protein–protein
+  interaction.
+\newblock {\em Protein Engineering}, 14(9):609--614, 2001.
+
+\bibitem{SILVA}
+Christian Quast, Elmar Pruesse, Pelin Yilmaz, Jan Gerken, Timmy Schweer, Pablo
+  Yarza, Jörg Peplies, and Frank~Oliver Glöckner.
+\newblock The silva ribosomal rna gene database project: improved data
+  processing and web-based tools.
+\newblock {\em Nucleic Acids Research}, 41(D1):D590--D596, 2013.
+
+\bibitem{Sato2005}
+Tetsuya Sato, Yoshihiro Yamanishi, Minoru Kanehisa, and Hiroyuki Toh.
+\newblock The inference of protein–protein interactions by co-evolutionary
+  analysis is improved by excluding the information about the phylogenetic
+  relationships.
+\newblock {\em Bioinformatics}, 21(17):3482--3489, 2005.
+
+\bibitem{negatome}
+Pawel Smialowski, Philipp Pagel, Philip Wong, Barbara Brauner, Irmtraud Dunger,
+  Gisela Fobo, Goar Frishman, Corinna Montrone, Thomas Rattei, Dmitrij
+  Frishman, et~al.
+\newblock The negatome database: a reference set of non-interacting protein
+  pairs.
+\newblock {\em Nucleic acids research}, 38(suppl 1):D540--D544, 2010.
+
+\bibitem{Zhou13}
+Hua Zhou and Eric Jakobsson.
+\newblock Predicting protein-protein interaction by the mirrortree method:
+  Possibilities and limitations.
+\newblock {\em PLoS ONE}, 8(12):1--9, 12 2013.
+
+\end{thebibliography}

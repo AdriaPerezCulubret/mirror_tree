@@ -1,69 +1,46 @@
 # MIRROR TREE
+			A program created by Sergio Castillo, Joan Martí & Adrià Pérez
 
-## Creating BLAST database
+## Creating databases
 
-> Run these commands in your working directory
+>>> Run these commands in your working directory<<<
 
+> Create uniprot_reposit
 ```sh
 mkdir db
 wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz -O db/uniprot_sprot.dat.gz
 zcat db/uniprot_sprot.dat.gz > db/all_uniprot.fa
-makeblastdb -in db/all_uniprot.fa -out db/all_uniprot -dbtype prot
 ```
 
-
-> Get the databases
+> Get FASTA sequences from proteins that interact from IntAct (BioGrid)
 ```sh
-wget 'ftp://ftp.ebi.ac.uk/pub/databases/intact/current/psimitab/intact.txt'
-python3 create_sets.py -i intact.txt -db db/uniprot_sprot.fasta -o input.fasta
+wget ftp://ftp.ebi.ac.uk/pub/databases/intact/current/psimitab/intact.txt -O db/intact.txt
+python3 bin/create_sets.py -i db/intact.txt -db db/uniprot_sprot.fasta -o input.fasta
 ```
 
-create_sets fetch circa than 77.000 IDs but gets circa 45.000 Ids from our uniprot_swissprot.fasta file, be aware. 
-
-
-
-
-```r
-hola <- read.table(file="prueba")
-library(ggplot2)
-ggplot(hola) + geom_point(aes(x=V4, y=V3), position="jitter")
-```
-
+> Get pfam database
 ```sh
-wget 'ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam29.0/Pfam-A.hmm.gz'
-```
-
-## HMMER commands
-
-```sh
+wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam29.0/Pfam-A.hmm.gz -O db/Pfam-A.hmm.gz
 hmmpress db db/Pfam-A.hmm
 hmmscan db/Pfam-A.hmm prova.fa
-
-
 ```
 
-# Non-interacting proteins
+> Get a list of non-interacting proteins as a true negative from Negatome databse
+```sh 
+wget http://mips.helmholtz-muenchen.de/proj/ppi/negatome/manual_stringent.txt -O db/NonInteract.tbl
+python3 bin/create_sets.py -i db/NonInteract.tbl  -db db/uniprot_sprot.fasta -o NonInteract.fasta
+```
+
+> Get the alignment of 16S rRNAs for enhancing the correlations
 ```sh
- 
-wget 'http://mips.helmholtz-muenchen.de/proj/ppi/negatome/manual_stringent.txt'
-mv manual_stringent.txt db/NonInt.tbl
-
+wget http://www.arb-silva.de/fileadmin/silva_databases/release_123/Exports/SILVA_123_LSURef_tax_silva_full_align_trunc.fasta.gz -O db/SILVA_123_LSURef_tax_silva_full_align_trunc.fasta.gz
 ```
 
+## EVALUATION
 
 
-# sacred perl
 
-```perl
-perl -ne '($a, $b, $r) = split /\s+/; if ($a =~ /human/i and $b =~ /human/i) {chomp; print "$_ NO\n";}' prova_noint.out > OUT_NO.txt
-
-
-```
-
-#  --> 16S rRNA
-
+## USAGE
 ```sh
-
-wget 'http://www.arb-silva.de/fileadmin/silva_databases/release_123/Exports/SILVA_123_LSURef_tax_silva_full_align_trunc.fasta.gz'
-
+python3 CheeseCake.py -i FASTA QUERY FILE -db db/all_uniprot.fa -v -sp 10 -t species/animals.tbl -ints LIST INTERACTIONS CHECK OUT > prova15_animalsnoint.out
 ```
