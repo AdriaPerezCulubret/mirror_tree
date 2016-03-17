@@ -40,6 +40,56 @@ class SequenceObj(SeqIO.SeqRecord):
         else:
             return self.__homolog_sp
 
+class Distance_Calculator_Improved(DistanceCalculator):
+    '''
+    This distance calculator allows more letters (Y, N etc. for DNA, RNA etc.)
+    '''
+    def __init__(self,model="identity"):
+        super(Distance_Calculator_Improved, self).__init__(model)
+
+    def _pairwise(self, seq1, seq2):
+        '''
+        Calculate pairwise distance from two sequences.
+
+        Returns a value between 0 (identical sequences) and 1 (completely
+        different, or seq1 is an empty string.)
+        '''
+        score = 0
+        max_score = 0
+        if self.scoring_matrix:
+            max_score1 = 0
+            max_score2 = 0
+            skip_letters = ['-', '*', '.', 'W', 'S', 'N', 'M', 'K', 'R', 'Y', 'B', 'V', 'D', 'H']
+            for i in range(0, len(seq1)):
+                l1 = seq1[i]
+                l2 = seq2[i]
+                if l1 in skip_letters or l2 in skip_letters:
+                    continue
+                if l1 not in self.scoring_matrix.names:
+                    raise ValueError("Bad alphabet '%s' in sequence '%s' at position '%s'"
+                                     % (l1, seq1.id, i))
+                if l2 not in self.scoring_matrix.names:
+                    raise ValueError("Bad alphabet '%s' in sequence '%s' at position '%s'"
+                                     % (l2, seq2.id, i))
+                max_score1 += self.scoring_matrix[l1, l1]
+                max_score2 += self.scoring_matrix[l2, l2]
+                score += self.scoring_matrix[l1, l2]
+            # Take the higher score if the matrix is asymmetrical
+            max_score = max(max_score1, max_score2)
+        else:
+            # Score by character identity, not skipping any special letters
+            for i in range(0, len(seq1)):
+                l1 = seq1[i]
+                l2 = seq2[i]
+                if l1 == l2:
+                    score += 1
+            max_score = len(seq1)
+
+        if max_score == 0:
+            return 1  # max possible scaled distance
+        return 1 - (score * 1.0 / max_score)
+
+
 
 class Interaction(object):
     '''
@@ -90,19 +140,30 @@ class Interaction(object):
         Sets the distance matrix for the "numseq" sequence.
         '''
         aln = AlignIO.read(open(file), 'stockholm')
-        calculator = DistanceCalculator('blosum62')
+        calculator = None
+        if numseq == 3:
+            calculator = Distance_Calculator_Improved('trans')
+        else:
+            calculator = DistanceCalculator('blosum62')
 
         dist_matrix = calculator.get_distance(aln)
+
         matrix_list = self.__matrix_to_list(dist_matrix)
 
         if numseq == 1:
             self.matrix1 = matrix_list
+            print(len(self.matrix1))
             if self.matrix1.count(0.0) == len(self.matrix1):
                 self.matrix1 = "zero"
         elif numseq == 2:
             self.matrix2 = matrix_list
+            print(len(self.matrix2))
             if self.matrix2.count(0.0) == len(self.matrix2):
                 self.matrix2 = "zero"
+        elif numseq == 3:
+            self.sp_matrix = matrix_list
+            #print(dist_matrix)
+            print (len(self.sp_matrix))
         else:
             raise Exception ("numseq must be either 1 or 2!")
 
@@ -113,10 +174,10 @@ class Interaction(object):
         partialing out "sp_matrix"
         '''
         if self.sp_matrix is not None:
-            res1 = self.__linear_reg_residues(self.matrix1, self.sp_matrix)
-            res2 = self.__linear_reg_residues(self.matrix2, self.sp_matrix)
-            self.partial_r = np.corrcoef(res1,res2)[1,0]
-            return self.partial_r
+            res1    = self.__linear_reg_residues(self.matrix1, self.sp_matrix)
+            res2    = self.__linear_reg_residues(self.matrix2, self.sp_matrix)
+            partial = np.corrcoef(res1,res2)[1,0]
+            return partial
         else:
             return "NA"
 
@@ -134,9 +195,10 @@ class Interaction(object):
         elif self.correlation is None:
             self.correlation = np.corrcoef(self.matrix1,self.matrix2)[1,0]
             self.spearman    = st.spearmanr(self.matrix1,self.matrix2)[0]
-            return self.correlation, self.spearman
+            self.partial_r   = self.partial_corr()
+            return self.correlation, self.spearman, self.partial_r
         else:
-            return self.correlation, self.spearman
+            return self.correlation, self.spearman, self.partial_r
 
 class ProgramNotFound(Exception):
     '''
