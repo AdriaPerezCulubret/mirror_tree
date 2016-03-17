@@ -88,6 +88,15 @@ def parse_options():
         help     = "r cutoff to classify interacting protein pairs."
     )
 
+    parser.add_argument(
+        "-g", "--graph",
+        dest     = "graph",
+        action   = "store",
+        default  = None,
+        required = False,
+        help     = "Html filename to save the graph."
+    )
+
     options = parser.parse_args()
     return options
 
@@ -276,7 +285,7 @@ def read_jack(file, query_dict, target_dict):
                 already_added_sp.add((q,target_dict[t].species))
         else:
             continue
-            
+
     fh.close()
     return query_dict
 
@@ -411,10 +420,58 @@ def hmmalign(sfile1, sfile2, hfile1, hfile2):
     hmmer_align(sfile2, hfile2)
     return
 
+def create_json(interactions):
+    node_str = "nodes: [\n"
+    int_str  = "edges: [\n"
+    added_nodes = set()
+    for inte in interactions:
+        # Add nodes
+        if inte[0] not in added_nodes:
+            node_str += "{ data: { id: '%s', name: '%s', colorNODE: '#8FBFAE' } },\n" % (inte[0],inte[0])
+            added_nodes.add(inte[0])
+        if inte[1] not in added_nodes:
+            node_str += "{ data: { id: '%s', name: '%s', colorNODE: '#8FBFAE' } },\n" % (inte[1],inte[1])
+            added_nodes.add(inte[1])
+        # Add interactions
+        int_str += "{ data: { id: '%s-%s', source: '%s', target: '%s', colorEDGE: '#8FBFAE'} },\n" % (inte[0], inte[1], inte[0], inte[1])
+        int_str += "{ data: { id: '%s-%s', source: '%s', target: '%s', colorEDGE: '#8FBFAE'} },\n" % (inte[1], inte[0], inte[1], inte[0])
+    node_str += "],\n"
+    int_str  += "]\n"
+    whole_str = node_str + int_str
+    return whole_str
+
+def write_html(data, json, gfile):
+    fh    = open(data + "html_template", "r")
+    outfh = open(gfile, "w")
+    for line in fh:
+        line = line.strip()
+        if line == ">DATAHERE":
+            outfh.write(json)
+        else:
+            outfh.write(line + "\n")
+    fh.close()
+    outfh.close()
+
+'''
+Writes an html file with a representation of the graph using Cytoscape.js
+'''
+def write_html_graph(interactions, data, gfile, cutoff):
+    # Get Real interactions
+    real_ints = list()
+    for inte in interactions:
+        if inte.get_corr()[0] >= cutoff:
+            real_ints.append((inte.seq1.id, inte.seq2.id))
+
+    # Json with graph data
+    json = create_json(real_ints)
+
+    write_html(data, json, gfile)
+
 '''
 Computes the correlations for each possible interaction pair and prints them
 '''
 def predict_interactions(query_dict, options, RNAfile, tax_names, outfh, interactions):
+    total_ints = list()
     i = 1
     for seq in itertools.combinations(query_dict.keys(), 2):
         seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
@@ -459,7 +516,9 @@ def predict_interactions(query_dict, options, RNAfile, tax_names, outfh, interac
 
         interaction = define_interacton(seq1, seq2, seqfile_1, seqfile_2, i)
         write_output(seq1.id, seq2.id, interaction, options.cutoff, outfh)
+        total_ints.append(interaction)
         i += 1
+    return total_ints
 
 '''
 MAIN PROGRAM
@@ -508,10 +567,19 @@ def main():
     # OUTPUT
     outfh = open(options.output, "w")
     outfh.write("SEQ1\tSEQ2\tPearson\tSpearman\tr_Adjusted\n")
-    predict_interactions(query_dict, options, RNAfile, tax_names, outfh, interactions)
+    total_ints = predict_interactions(
+        query_dict,
+        options,
+        RNAfile,
+        tax_names,
+        outfh,
+        interactions
+    )
     outfh.close()
 
     print_job("REMOVING TEMP FILES")
+    if options.graph:
+        write_html_graph(total_ints, options.data, options.graph, options.cutoff)
     #erase_temp(options.verbose)
     if options.verbose:
         print_report()
