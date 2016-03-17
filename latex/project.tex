@@ -24,7 +24,7 @@
 
 % DOC INFO
 %-----------------------
-\title{MirrorTrees: The Alice's Wonderland of Proteomics}
+\title{MirrorTrees: Interaction through the looking-glass}
 \author{
 	Sergio Castillo
 	\and
@@ -32,7 +32,7 @@
 	\and
 	Adrià Pérez
 }
-\date{Structural Bioinformatics, MSc in Bioinformatics for Health Sciences}
+\date{Structural Bioinformatics, MSc in Bioinformatics for Health Sciences - Universitat Pompeu Fabra}
 
 % DOCUMENT
 %-----------------------
@@ -45,7 +45,7 @@ In the so-called OMICS era, with the high-throughput, the amount of data is huge
 
 Now, there is the opportunity to infer physical interactions \textit{in silico}, and then focus the experimental work to validation.
 
-Exist different algorithms or procedures for infering proteic physical interaction, but in this essay we are going to cover only the MirrorTree approach, developed in early century by Dr. Alfonso Valencia and associates \cite{Pazos2001}.
+Exist different algorithms or procedures for inferring proteic physical interaction, but in this essay we are going to cover only the MirrorTree approach, developed in early century by Dr. Alfonso Valencia and associates \cite{Pazos2001}.
 
 The MirrorTree is based on co-evolutionary methodology, as MirrorTree assumes that if physical interactions between proteins, they should co-evolve, moreover, they should share similar evolutionary history.
 
@@ -75,14 +75,20 @@ In further sections there would be a discussion over these assumptions.
 Our integrative tool takes a slightly different approach to the Valencia's team to MirrorTrees. Our pipeline is as follows:
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
-	\item Gather \textit{n} sequences to test its interaction.
-	\item Create \textit{n} sets, consisted of orthologous sequences(search with a hidden markov model, using jackhmmer \cite{HMMER}).
-	\item Build a MSA for \textit{n} sets (using hmmalign \cite{HMMER}).
-	\item Use the distance matrix for each set provided by jackhmmer \cite{HMMER} (using Blosom62 matrix).
-	\item Compare the the distance matrices at 1:1 rate.
+	\item Gather \textit{n} sequences to test its interaction in .FASTA format.
+	\item Download the needed databases/files:
+	\begin{enumerate}
+	\setlength{\itemsep}{1pt}
+		\item uniprot database.
+		\item pfam database.
+		\item Alignment of 18S rRNA sequences of the species that are used in .AFA format (already provided by animal taxon).
+	\end{enumerate}
+	\item Look for orthologous sequences for each query sequence (search with a hidden markov model, using jackhmmer \cite{HMMER}).
+	\item Build a MSA for each query sequence and their putative orthologs (using hmmalign \cite{HMMER}).
+	\item Use the distance matrix for each set provided by jackhmmer at the last iteration \cite{HMMER} (using Blosom62 matrix).
+	\item Compare the the distance matrices between the query sequences.
 	\item Partial out the spurious correlation (species-lineage relationship) using the distance matrix of the species tree (18S rRNA) \cite{Sato2005}.	
-	\item Build a correlation coefficient (Pearson's r and Spearman's rho) based on the difference between the matrices.
-
+	\item Build a correlation coefficient (Pearson's r, Spearman's rho and partial correlations) based on the difference between the matrices.
 \end{enumerate}
 
 \subsection{Databases}
@@ -102,8 +108,11 @@ Despite being a possible theoretical approach, Valencia's work in 2001\cite{Pazo
 One of the main handicaps that exist in MirrorTree approaching is that its assumptions are not always valid.
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
-	\item \textit{Proteins that interact directly co-evolve}: Not necessarily. Interaction between proteins occurs at domain level, more precisely it interacts with the interaction region, a smaller region within the domain, not at the whole protein. It might be true that interaction regions co-evolve, but that does not mean that co-evolve the whole protein. Besides, even the co-evolution between interaction sites is somehow obscure, as it depends on the intensity of the selective pressure between them. It is known that the interaction between proteins is not static, is partially adaptative (key-lock vs greeting-hands). So, would always be relevant an aminoacid exchange? How intense is the selective pressure between the regions?
-	\item \textit{Proteins that interact directly and co-evolve should share the same evolutionary history, so they may have similar phylogenies.} This is a strong assumption, as it would be commented in following sections, co-evolution relies upon strong selective pressure in order to be fully detected. In order to have coincident phylogenies, there should be a fairly strong selection between interactors. The problem raises as this is not a frequent.
+	\item \textit{Proteins that interact directly co-evolve}: Not necessarily. Interaction between proteins 		occurs at domain level, more precisely it interacts with the interaction region, a smaller region within 		the domain, not at the whole protein. It might be true that interaction regions co-evolve, but that does 		not mean that co-evolve the whole protein. Besides, even the co-evolution between interaction sites is 		somehow obscure, as it depends on the intensity of the selective pressure between them. It is known that 		the interaction between proteins is not static, is partially adaptative (key-lock vs greeting-hands). So, 	would always be relevant an aminoacid exchange? How intense is the selective pressure between the 			regions?
+
+	Moreover, co-evolution can also act at network level, therefore, it is plausible that proteins that do 		not physically interact may co-evolve, as both might be of importance in the pathway. Then, does proteins 	can de detected as false positive, as they interact, they have a relationship but not interact directly. 		Co-evolution is a good measure for direct interaction?
+
+	\item \textit{Proteins that interact directly and co-evolve should share the same evolutionary history, 		so they may have similar phylogenies.} This is a strong assumption, as it would be commented in following		sections, co-evolution relies upon strong selective pressure in order to be fully detected. In order to 		have coincident phylogenies, there should be a fairly strong selection between interactors. The problem 		raises as this is not a frequent.
 \end{enumerate}
 
 \subsection{Search of orthologs}
@@ -127,8 +136,8 @@ Searching on the main bibliography of the topic, 3 measures of correlation are u
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
 	\item \textit{Pearson's r}\cite{Pazos2001}.
-	\item \textit{Spearman's rho:} As maybe the relationship between matrices is not linear, or it may have outlayers that alter the fitting of the linear model, it could be of help to see how it behaves a rank-based correlation.
-	\item \textit{Partial correlation (using 18S rRNA phylogeny of the species):}\cite{Sato2005} When performing correlation between matrices, exist a common relationship that need to be taken into account, the phylogeny of the species used in the trees. For building the phylogeny a lineage-specific marker is needed. Usually is recommended to use the 18S rRNA for these purpose\cite{Sato2005}. It would be interesting to see how the correlation changes.
+	\item \textit{Spearman's rho:} As maybe the relationship between matrices is not linear, or it may have 		outlayers that alter the fitting of the linear model, it could be of help to see how it behaves a rank-		based correlation.
+	\item \textit{Partial correlation (using 18S rRNA phylogeny of the species):}\cite{Sato2005} When 			performing correlation between matrices, exist a common relationship that need to be taken into account, 		the phylogeny of the species used in the trees. For building the phylogeny a lineage-specific marker is 		needed. Usually is recommended to use the 18S rRNA for these purpose\cite{Sato2005}. It would be 				interesting to see how the correlation changes.
 \end{enumerate}
 
 In order to see which of them provided a better classification for interactions between proteins, all three statistics where build.
@@ -137,8 +146,8 @@ In order to see which of them provided a better classification for interactions 
 One of the reported problems about the MirrorTree approach is the reproducibility. Above all, the goodness of the results depend on the chosen dataset. As observed in Zhou's work\cite{Zhou13}, 3 different sets, with reasonable resemblance between them:
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
-	\item \textit{Set1:} Common interactors of \textit{Saccharomyces cerevisiae} and \textit{Homo sapiens}, with both cases experimentally confirmed their interaction.
-	\item \textit{Set2}: Analogous but pairs only need to be experimentally confirmed in one of the two species.
+	\item \textit{Set1:} Common interactors of \textit{Saccharomyces cerevisiae} and \textit{Homo sapiens}, 		with both cases experimentally confirmed their interaction.
+	\item \textit{Set2}: Analogous but pairs only need to be experimentally confirmed in one of the two 			species.
 	\item \textit{Set3}: Analogous to set1 but using common interactors of \textit{Mus musculus} and   \textit{Homo sapiens}).
 \end{enumerate}
 Only certain degree of differences between interacting pairs and non-interacting pairs can be seen in set1. Set2, a more stringent subset of set1, does not show any difference between both groups, and set3, which is analogous to set1 but using more evolutionary closed species, neither show it.
@@ -153,8 +162,7 @@ In addition, in Valencia's article\cite{Pazos2001} 3 datasets are used:
 The results of the set1 (domains) is highly controversial, as it predicts better the co-evolution between domains of the same protein (logic if within protein selective pressure is taken into account) than between interacting domains. As previously mentioned, maybe the selective pressure, and thus the co-evolution is laxer in interacting domains than in within protein domains. Therefore, is co-evolution a good measure of selective pressure in protein interaction?
 In set2, it seems to be possible to properly classify the interactions (despite counting with ambiguous classification \textit{possible}). In set 3 the situation is analogous to set2.
 
-\textbf{
-\textbf{It seems, comparing the results of Zhou's article and Valencia's, that the further distances exists between the species, the better appear the results. Maybe the higher the evolutive distance is, the more inflated correlations are.}} ?????????????????'
+\textbf{\textbf{It seems, comparing the results of Zhou's article and Valencia's, that the further distances exists between the species, the better appear the results. Maybe the higher the evolutive distance is, the more inflated correlations are.}} ?????????????????'
 
 
 \section{Results}
