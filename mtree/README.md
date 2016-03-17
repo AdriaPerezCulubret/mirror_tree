@@ -6,7 +6,7 @@
 > Move to the root directory of the program and run these commands:
 
 ```sh
-
+sudo python3 setup.py install
 ```
 
 
