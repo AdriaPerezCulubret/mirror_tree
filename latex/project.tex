@@ -56,11 +56,11 @@ MirrorTree methodology, developed by Dr. Alfonso Valencia and associates, predic
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
 	\item Gather \textit{n} sequences to test its interaction.
-	\item Create \textit{n} sets, consisted of orthologous sequences(search by homology, using BLAST \cite{BLAST}).
-	\item Build a MSA for \textit{n} sets.
-	\item Build distance matrix for each set (using McLachlan 71).
+	\item Look for the orthologous sequences for each query protein query (search by homology, using BLAST \cite{BLAST}).
+	\item Build a MSA for each protein query.
+	\item Build distance matrix for each set (using McLachlan71).
 	\item Compare the the distance matrices at 1:1 rate.
-	\item Build a correlation coefficient (Pearson) based on the difference between the matrices.
+	\item Build a correlation coefficient (Pearson's r) based on the difference between the matrices.
 	\item Infer interaction.
 \end{enumerate}
 MirrorTree is settled upon the following suppositions:
@@ -89,6 +89,8 @@ Our integrative tool takes a slightly different approach to the Valencia's team 
 	\item Compare the the distance matrices between the query sequences.
 	\item Partial out the spurious correlation (species-lineage relationship) using the distance matrix of the species tree (18S rRNA) \cite{Sato2005}.	
 	\item Build a correlation coefficient (Pearson's r, Spearman's rho and partial correlations) based on the difference between the matrices.
+	\item Infer interaction.
+	\item Create interactome (graph).
 \end{enumerate}
 
 \subsection{Databases}
