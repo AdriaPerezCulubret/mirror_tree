@@ -440,7 +440,6 @@ def create_json(interactions):
             added_nodes.add(inte[1])
         # Add interactions
         int_str += "{ data: { id: '%s-%s', source: '%s', target: '%s', colorEDGE: '#8FBFAE'} },\n" % (inte[0], inte[1], inte[0], inte[1])
-        int_str += "{ data: { id: '%s-%s', source: '%s', target: '%s', colorEDGE: '#8FBFAE'} },\n" % (inte[1], inte[0], inte[1], inte[0])
     node_str += "],\n"
     int_str  += "]\n"
     whole_str = node_str + int_str
@@ -468,6 +467,8 @@ def write_html_graph(interactions, data, gfile, cutoff):
         if inte.get_corr()[0] >= cutoff:
             real_ints.append((inte.seq1.id, inte.seq2.id))
 
+    if not real_ints:
+        sys.stderr.write("# Can't create html graph: No interactions found.\n")
     # Json with graph data
     json = create_json(real_ints)
 
@@ -479,6 +480,7 @@ def predict_interactions(query_dict, options, RNAfile, tax_names, outfh, interac
     Computes the correlations for each possible interaction pair and prints them
     '''
     i = 1
+    total_ints = list()
     for seq in itertools.combinations(query_dict.keys(), 2):
         seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
 
@@ -583,10 +585,14 @@ def main():
     )
     outfh.close()
 
-    print_job("REMOVING TEMP FILES")
     if options.graph:
+        if options.verbose:
+            print_job("WRITING HTML GRAPH")
         write_html_graph(total_ints, options.data, options.graph, options.cutoff)
+
+    print_job("REMOVING TEMP FILES")
     #erase_temp(options.verbose)
+
     if options.verbose:
         print_report()
 
