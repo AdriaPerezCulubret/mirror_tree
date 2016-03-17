@@ -45,8 +45,7 @@ def parse_options():
         "-o", "--output",
         dest     = "output",
         action   = "store",
-        default  = None,
-        required = True,
+        default  = False,
         help     = "Output filename."
     )
 
@@ -54,7 +53,7 @@ def parse_options():
         "-v", "--verbose",
         dest    = "verbose",
         action  = "store_true",
-        default = False,
+        default = "sys.stdout",
         help    = "Prints log to STDERR."
     )
     parser.add_argument(
@@ -84,8 +83,8 @@ def parse_options():
         "-c", "--cutoff",
         dest     = "cutoff",
         type     = float,
-        default  = 0.5,
-        help     = "r cutoff to classify interacting protein pairs."
+        default  = 0.7,
+        help     = "r cutoff to classify interacting protein pairs by Pearson's correlation."
     )
 
     options = parser.parse_args()
@@ -400,7 +399,11 @@ Writes the output to a given file
 '''
 def write_output(id1, id2, interaction, cutoff, outfh):
     pears, spear, radj  = interaction.get_corr()
-    outfh.write("%s\t%s\t%s\t%s\t%s\n" %(id1, id2, pears, spear, radj))
+    outfh.write("%s\t%s\t%s\t%s\t%s\t" %(id1, id2, pears, spear, radj))
+    if cutoff < pears:
+        outfh.write("Int\n")
+    else:
+        outfh.write("NoInt\n")
     return
 
 '''
@@ -507,7 +510,7 @@ def main():
 
     # OUTPUT
     outfh = open(options.output, "w")
-    outfh.write("SEQ1\tSEQ2\tPearson\tSpearman\tr_Adjusted\n")
+    outfh.write("SEQ1\tSEQ2\tPearson\tSpearman\tr_Adjusted\tType\n")
     predict_interactions(query_dict, options, RNAfile, tax_names, outfh, interactions)
     outfh.close()
 
