@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2015.10.29)  17 MAR 2016 13:01
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2015.10.29)  17 MAR 2016 15:30
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -686,25 +686,26 @@ LaTeX Info: Redefining \nameref on input line 39.
 
  [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2] [3] (./project.bbl)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 164.
- [4]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 164.
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2] [3] (./project.bbl [4]
+)
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 175.
+ [5]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 175.
  (./project.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 164.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 164.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 175.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 175.
 Package rerunfilecheck Info: File `project.out' has not changed.
-(rerunfilecheck)             Checksum: 197B6FFBC7CE2289F891F06CAB1C25D9;685.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 164.
+(rerunfilecheck)             Checksum: DAA7DB97DE4B34ECC2DD812E9E76A2A9;753.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 175.
  ) 
 Here is how much of TeX's memory you used:
- 9649 strings out of 494985
- 139363 string characters out of 6180355
- 241160 words of memory out of 5000000
- 12695 multiletter control sequences out of 15000+600000
+ 9658 strings out of 494985
+ 139441 string characters out of 6180355
+ 241188 words of memory out of 5000000
+ 12696 multiletter control sequences out of 15000+600000
  13442 words of font info for 35 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 36i,6n,38p,767b,374s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 36i,6n,38p,781b,419s stack positions out of 5000i,500n,10000p,200000b,80000s
  </home/johnconnor/.texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1095.600pk> </h
 ome/johnconnor/.texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1200.600pk> </home/jo
 hnconnor/.texmf-var/fonts/pk/ljfour/jknappen/ec/ecti1095.600pk> </home/johnconn
@@ -712,10 +713,10 @@ or/.texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1095.600pk> </home/johnconnor/.te
 xmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1440.600pk> </home/johnconnor/.texmf-va
 r/fonts/pk/ljfour/jknappen/ec/ecrm1200.600pk> </home/johnconnor/.texmf-var/font
 s/pk/ljfour/jknappen/ec/ecrm1728.600pk>
-Output written on project.pdf (4 pages, 93637 bytes).
+Output written on project.pdf (5 pages, 95502 bytes).
 PDF statistics:
- 432 PDF objects out of 1000 (max. 8388607)
- 164 compressed objects within 2 object streams
- 57 named destinations out of 1000 (max. 500000)
- 97 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 451 PDF objects out of 1000 (max. 8388607)
+ 178 compressed objects within 2 object streams
+ 65 named destinations out of 1000 (max. 500000)
+ 105 words of extra memory for PDF output out of 10000 (max. 10000000)
 

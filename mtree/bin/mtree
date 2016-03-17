@@ -45,8 +45,7 @@ def parse_options():
         "-o", "--output",
         dest     = "output",
         action   = "store",
-        default  = None,
-        required = True,
+        default  = False,
         help     = "Output filename."
     )
 
@@ -54,7 +53,7 @@ def parse_options():
         "-v", "--verbose",
         dest    = "verbose",
         action  = "store_true",
-        default = False,
+        default = "sys.stdout",
         help    = "Prints log to STDERR."
     )
     parser.add_argument(
@@ -84,8 +83,8 @@ def parse_options():
         "-c", "--cutoff",
         dest     = "cutoff",
         type     = float,
-        default  = 0.5,
-        help     = "r cutoff to classify interacting protein pairs."
+        default  = 0.7,
+        help     = "r cutoff to classify interacting protein pairs by Pearson's correlation."
     )
 
     parser.add_argument(
@@ -100,10 +99,12 @@ def parse_options():
     options = parser.parse_args()
     return options
 
-'''
-Prints a start log
-'''
+
 def print_report():
+    '''
+    Prints a start log
+    '''
+
     HOSTNAME = socket.gethostname()
     sys.stderr.write("""
 # ------------------------------------------
@@ -114,10 +115,11 @@ def print_report():
 """ %(HOSTNAME, time.ctime()))
 
 
-'''
-Prints a Job log
-'''
+
 def print_job(string):
+    '''
+    Prints a Job log
+    '''
     sys.stderr.write('''
 # ------------------------------------------
 # %s
@@ -125,10 +127,10 @@ def print_job(string):
 ''' % string)
 
 
-'''
-Tests if a given program is installed
-'''
 def test_program(program):
+    '''
+    Tests if a given program is installed
+    '''
     try:
         # Pipe output to /dev/null for silence
         null = open("/dev/null", "w")
@@ -140,20 +142,20 @@ def test_program(program):
         else:
             raise Exception("Ooops...Something went wrong")
 
-'''
-Tests if all the necessary programs are installed
-'''
 def test_all():
+    '''
+    Tests if all the necessary programs are installed
+    '''
     test_program("jackhmmer")
     test_program("hmmscan")
     test_program("hmmfetch")
     test_program("hmmalign")
     test_program("perl")
 
-'''
-Gets the species from a sequence header
-'''
 def get_species(description):
+    '''
+    Gets the species from a sequence header
+    '''
     p = re.compile('OS=(.*?)\s?(\(.+\))?\s?[\w\d]*?\s*=')
     species = None
 
@@ -164,10 +166,10 @@ def get_species(description):
 
     return species
 
-'''
-Creates a dictionary with sequence objects. Keys = sequence ID
-'''
 def fasta_to_dict(fasta, verbose):
+    '''
+    Creates a dictionary with sequence objects. Keys = sequence ID
+    '''
     handle      = open(fasta, "rU")
     record_dict = dict()
     if verbose:
@@ -197,29 +199,29 @@ def fasta_to_dict(fasta, verbose):
         sys.stderr.write("ok\n")
     return record_dict
 
-'''
-Creates all the directories used by the program
-'''
 def create_directories():
+    '''
+    Creates all the directories used by the program
+    '''
     mypath = "tmp"
     if not os.path.isdir(mypath):
         os.makedirs(mypath)
 
-'''
-Checks if two seq objects share at least k homologs in k species
-'''
 def share_homolog_sp(seq1, seq2, k, tax):
+    '''
+    Checks if two seq objects share at least k homologs in k species
+    '''
     common = seq1.get_homolog_species() & seq2.get_homolog_species() & tax
     if len(common)>= k:
         return common
     else:
         return None
 
-'''
-Creates a FASTA file with the homologs of species common to two
-sequences
-'''
 def print_seqs_MSA(seqobj, filename, common_sp):
+    '''
+    Creates a FASTA file with the homologs of species common to two
+    sequences
+    '''
     output_handle = open(filename, "w")
     SeqIO.write(seqobj, output_handle, "fasta")
 
@@ -232,10 +234,10 @@ def print_seqs_MSA(seqobj, filename, common_sp):
 
     return
 
-'''
-Removes temporary files
-'''
 def erase_temp(verbose):
+    '''
+    Removes temporary files
+    '''
     if verbose:
         sys.stderr.write("# Removing all tmp files...\n")
     files = glob.glob('tmp/*')
@@ -244,11 +246,11 @@ def erase_temp(verbose):
     if verbose:
         sys.stderr.write("# Removed all tmp files\n\n#  Bye!\n")
 
-'''
-Reads the interaction file and returns a set with tuples. Only used for Testing purposes.
-User: DO NOT TOUCH
-'''
 def read_interactome(int_file):
+    '''
+    Reads the interaction file and returns a set with tuples. Only used for Testing purposes.
+    User: DO NOT TOUCH
+    '''
     interactions = set()
     intis = open(int_file, "r")
     next(intis) # Skip first line
@@ -265,11 +267,11 @@ def read_interactome(int_file):
 
     return interactions
 
-'''
-Reads jackhmmer tabular output and saves homologs in SequenceObj.
-We only keep the first result for each species, as it is the one with the lowest e-value.
-'''
 def read_jack(file, query_dict, target_dict):
+    '''
+    Reads jackhmmer tabular output and saves homologs in SequenceObj.
+    We only keep the first result for each species, as it is the one with the lowest e-value.
+    '''
     fh = open(file, "r")
     already_added_sp = set()
 
@@ -289,10 +291,10 @@ def read_jack(file, query_dict, target_dict):
     fh.close()
     return query_dict
 
-'''
-Runs jackhmmer and reads it using read_jack()
-'''
 def run_jackhmmer(query_dict, target_dict, query, target, verbose):
+    '''
+    Runs jackhmmer and reads it using read_jack()
+    '''
     if verbose:
         sys.stderr.write("# Performing jackhmmer search...")
         sys.stderr.flush()
@@ -304,18 +306,18 @@ def run_jackhmmer(query_dict, target_dict, query, target, verbose):
 
     return query_dict
 
-'''
-Aligns all the sequences homologous to the HMM generated by jackhmmer
-'''
 def hmmer_align(seq_file, hmm_file):
+    '''
+    Aligns all the sequences homologous to the HMM generated by jackhmmer
+    '''
     cmd = 'hmmalign --outformat Stockholm "%s" "%s" | perl -ne \'print uc($_);\' > %s.out' %(hmm_file, seq_file, seq_file)
     os.system(cmd)
 
-'''
-This function searches the HMM for the given sequence name iteratively in the different
-chkhmm files generated by jackhmmer
-'''
 def hmm_fetch_finder(qname, clean_name):
+    '''
+    This function searches the HMM for the given sequence name iteratively in the different
+    chkhmm files generated by jackhmmer
+    '''
     for i in reversed( range(3) ): # Because N = 3 for JACKHMMER
         filenum    = i + 1
         model_name = qname
@@ -329,10 +331,10 @@ def hmm_fetch_finder(qname, clean_name):
             # HMM was found
             break
 
-'''
-Fetches hmm file from jackhmmer and prints the HMM to a file
-'''
 def print_hmm(query_dict, verbose):
+    '''
+    Fetches hmm file from jackhmmer and prints the HMM to a file
+    '''
     if verbose:
         sys.stderr.write("# Fetching hmm profiles...")
         sys.stderr.flush()
@@ -346,10 +348,10 @@ def print_hmm(query_dict, verbose):
 
     return
 
-'''
-Reads the taxonomy files to build the trees using only these species
-'''
 def read_taxonomy(file, verbose):
+    '''
+    Reads the taxonomy files to build the trees using only these species
+    '''
     tax_names = set()
     fh = open(file, "r")
     if verbose:
@@ -362,10 +364,10 @@ def read_taxonomy(file, verbose):
         sys.stderr.write("ok\n")
     return tax_names
 
-'''
-Prints rRNA seq alignments for the common species
-'''
 def print_rRNA(common_sp, rnafile, filenum, species):
+    '''
+    Prints rRNA seq alignments for the common species
+    '''
     align = AlignIO.read(open(rnafile), "stockholm")
     common = common_sp
     common.add(species)
@@ -386,36 +388,40 @@ def print_rRNA(common_sp, rnafile, filenum, species):
     else:
         raise Exception("Something wrong: rRNA length != common_sp\n")
 
-'''
-Gets the necessary files in the data directory
-'''
 def get_data_files(direct):
+    '''
+    Gets the necessary files in the data directory
+    '''
     taxonomy = direct + "/animals.restricted"
     RNAfile  = direct + "/animals_align.sto"
     return taxonomy, RNAfile
 
-'''
-Creates an interaction object and sets the necessary distance matrices.
-'''
 def define_interacton(seq1, seq2, seqfile_1, seqfile_2, i):
+    '''
+    Creates an interaction object and sets the necessary distance matrices.
+    '''
     interaction = mtree.Interaction(seq1, seq2)
     interaction.set_dist_matrix(1, seqfile_1 + ".out")
     interaction.set_dist_matrix(2, seqfile_2 + ".out")
     interaction.set_dist_matrix(3, "tmp/" + str(i) + ".sto")
     return interaction
 
-'''
-Writes the output to a given file
-'''
 def write_output(id1, id2, interaction, cutoff, outfh):
+    '''
+    Writes the output to a given file
+    '''
     pears, spear, radj  = interaction.get_corr()
-    outfh.write("%s\t%s\t%s\t%s\t%s\n" %(id1, id2, pears, spear, radj))
+    outfh.write("%s\t%s\t%s\t%s\t%s\t" %(id1, id2, pears, spear, radj))
+    if cutoff < pears:
+        outfh.write("Int\n")
+    else:
+        outfh.write("NoInt\n")
     return
 
-'''
-Performs MSA using hmmalign
-'''
 def hmmalign(sfile1, sfile2, hfile1, hfile2):
+    '''
+    Performs MSA using hmmalign
+    '''
     hmmer_align(sfile1, hfile1)
     hmmer_align(sfile2, hfile2)
     return
@@ -467,11 +473,11 @@ def write_html_graph(interactions, data, gfile, cutoff):
 
     write_html(data, json, gfile)
 
-'''
-Computes the correlations for each possible interaction pair and prints them
-'''
+
 def predict_interactions(query_dict, options, RNAfile, tax_names, outfh, interactions):
-    total_ints = list()
+    '''
+    Computes the correlations for each possible interaction pair and prints them
+    '''
     i = 1
     for seq in itertools.combinations(query_dict.keys(), 2):
         seq1, seq2 = query_dict[ seq[0] ], query_dict[seq[1]]
@@ -520,10 +526,10 @@ def predict_interactions(query_dict, options, RNAfile, tax_names, outfh, interac
         i += 1
     return total_ints
 
-'''
-MAIN PROGRAM
-'''
 def main():
+    '''
+    MAIN PROGRAM
+    '''
     # GET THE OPTIONS
     options = parse_options()
 
@@ -566,7 +572,7 @@ def main():
 
     # OUTPUT
     outfh = open(options.output, "w")
-    outfh.write("SEQ1\tSEQ2\tPearson\tSpearman\tr_Adjusted\n")
+    outfh.write("SEQ1\tSEQ2\tPearson\tSpearman\tr_Adjusted\tType\n")
     total_ints = predict_interactions(
         query_dict,
         options,
