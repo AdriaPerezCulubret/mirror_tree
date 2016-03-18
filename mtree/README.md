@@ -9,11 +9,10 @@
 sudo python3 setup.py install
 ```
 
-
 ## Usage of mtree
 
 ```sh
-mtree -i input.fa -db uniprot.fa --data datafolder -c 0.8 -sp 8
+mtree -i input.fa -db uniprot.fa --data datafolder -g graph.html -c 0.8 -sp 8 > prediction.out
 ```
 
 ### Options
