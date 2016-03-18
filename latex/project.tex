@@ -25,7 +25,7 @@
 
 % DOC INFO
 %-----------------------
-\title{MirrorTrees: Interaction through the looking-glass}
+\title{MirrorTrees: Protein-	interactins through the looking-glass}
 \author{
 	Sergio Castillo
 	\and
@@ -92,7 +92,7 @@ The user can provide a Pearson's correlation cutoff to label the predictions, an
 
 
 \subsection{Evaluation}
-In order to develop the tool, different train/test sets where developed. For doing so, it is important to know beforehand the relationship between proteins.
+In order to develop mtree, different train/test sets where developed. For doing so, it is important to know beforehand the relationship between proteins.
 
 The IntAct database\cite{intact} is a curated database for known interactions between proteins. Downloading the dataset (2012-10-16 release) in MITAB27 format (extension from PSI-MI format).
 
@@ -129,7 +129,7 @@ When retrieving orthologous sequences, paralogous sequences are also retrieved. 
 
 Besides, proteins, and in special, proteins from multicellular eukaryots, may have many domains. If the aim of the study is to asses direct interaction between proteins, it must focus on the interaction region. Using BLAST-based searches can also lead to misleading homology, as it might search homologous sequences based on a domain which is not related to the interaction.
 
-On the contrary, HMM-based searches look for homologous sequences using an specific domain, which is fetched from the query sequence. Doing so, relationship between proteins, focusing on the interacting domain, can be ensured.
+On the contrary, HMM-based searches look for homologous sequences using an specific domain, which is fetched from the query sequence. Doing so, relationship between proteins, focusing on the interacting domain, can be ensured. For this reason, mtree uses HMM-based searches instead of BLAST-based searches.
 
 
 \subsection{Weight Matrix}
@@ -147,7 +147,7 @@ Searching on the main bibliography of the topic, 3 measures of correlation are u
 	\item \textit{Partial correlation (using 18S rRNA phylogeny of the species):}\cite{Sato2005} When 			performing correlation between matrices, exist a common relationship that need to be taken into account, 		the phylogeny of the species used in the trees. For building the phylogeny a lineage-specific marker is 		needed. Usually is recommended to use the 18S rRNA for these purpose\cite{Sato2005}. It would be 				interesting to see how the correlation changes.
 \end{enumerate}
 
-In order to see which of them provided a better classification for interactions between proteins, all three statistics where build.
+In order to see which of them provided a better classification for interactions between proteins, all three statistics are taken into account by mtree.
 
 \subsection{Reproducibility}
 One of the reported problems about the MirrorTree approach is the reproducibility. Above all, the goodness of the results depend on the chosen dataset. As observed in Zhou's work\cite{Zhou13}, 3 different sets, with reasonable resemblance between them:
@@ -172,25 +172,26 @@ In set2, it seems to be possible to properly classify the interactions (despite 
 
 \section{Results}
 \subsection{Mutual information}
-In order to know which coefficient is better for the predictions, mutual information (MI) was performed using R package \textit{FSelector} (version 0.19). 
+In order to know which coefficient is better for mtree predictions, mutual information (MI) was performed using R package \textit{FSelector} (version 0.19). 
 MI is used when there are multiple parameters in a model, and for enhancing it, one want to which of the parameters is truly involved with the prediction and which is just confounding the prediction.
 
-The result confirmed the expectations, non of the coefficients was a strong predictor the interactions by using our dataset.
+The mtree result confirmed the expectations, none of the coefficients was a strong predictor of the interactions by using our dataset.
 \subsection{Data}
 
 The set of available animals was restricted to \textit{animals} taxon, 200 sequences that interact and 80 sequences that do not interact. The results for our three measures (Pearson's r, Spearman's rho and partial correlation coefficient) are represented in Fig. 1, separating real interactions from IntAct (YES) and false interactions from Negatome (NO).
 
-As it can be seen in Fig.1, despite there is more interactions that non-interactions, and once it is corrected, the predictive power of the best coefficient (Pearson's r) is better than chance (it succeeds circa 0.60 of the times).
+As it can be seen in Fig.1, despite there is more interactions that non-interactions (issue that is corrected ), the predictive power of the best coefficient (Pearson's r) is better than chance (it succeeds circa 0.60 of the times).
 
-Despite the fact that some authors\cite{Sato2005} reflect that correcting the correlation by partialing out the phylogenetic relationship enhances MirrorTree approach, in this dataset seems that has no effect.
+Despite the fact that some authors\cite{Sato2005} reflect that correcting the correlation by partialing out the phylogenetic relationship enhances MirrorTree approach, with mtree dataset do not seem the case.
 
-Therefore, despite using different coefficients, the model is not able to make a strong prediction; moreover, it does not reproduce close results of the main article \cite{Pazos2001}. 
+Therefore, despite using different coefficients, mtree is only able to make weak predictions. As it is commented in the following section, there is an important lack of reproducibility of Valencia's approach \cite{Pazos2001}, not only by mtree but by other authors. 
+
 
 \begin{figure*}[t]
-	\includegraphics[width=1.0\textwidth]{glittle3.pdf}
+	\includegraphics[width=1.0\textwidth]{graphics3}
 	\enspace \caption{Relation between correlation coefficients and labelling success}
 \end{figure*}
 
-\bibliographystyle{plain}
+\bibliographystyle{ieeetr}
 \bibliography{project}	
 \end{document}
