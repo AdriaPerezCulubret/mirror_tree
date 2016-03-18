@@ -159,20 +159,34 @@ wget http://mips.helmholtz-muenchen.de/proj/ppi/negatome/manual_stringent.txt -O
 python3 bin/create_sets.py -i db/NonInt.tbl -db db/animals_uniprot.fa -o 300_negatome.fa --num 300
 ```
 
-
-
-
-
-> Get the alignment of 16S rRNAs for enhancing the correlations
+#### Run mtree with positives
 
 ```sh
-wget http://www.arb-silva.de/fileadmin/silva_databases/release_123/Exports/SILVA_123_LSURef_tax_silva_full_align_trunc.fasta.gz -O db/SILVA_123_LSURef_tax_silva_full_align_trunc.fasta.gz
+mtree -i 300_negatome.fa -db db/animals_uniprot.fa -ints db/intact.tbl --data data/ -sp 10 | \
+    perl -e '
+    print <>;
+    while(<>){
+        chomp;
+        @cols = split /\t/;
+        print "$cols[0]\t$cols[1]\t$cols[2]\t$cols[3]\t$cols[4]\tYES\n";
+    }' > testing.tbl
+```
+
+#### Run mtree with negatives
+
+```sh
+mtree -i 300_negatome.fa -db db/animals_uniprot.fa -ints db/NonInt.tbl --data data/ -sp 10 | \
+    perl -e '
+    print <>;
+    while(<>){
+        chomp;
+        @cols = split /\t/;
+        print "$cols[0]\t$cols[1]\t$cols[2]\t$cols[3]\t$cols[4]\tNO\n";
+    }' >> testing.tbl
 ```
 
 
-
-
-## Plots
+## Plots - R console
 
 ```r
 library(ggplot2)
