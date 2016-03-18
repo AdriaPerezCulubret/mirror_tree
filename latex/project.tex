@@ -55,7 +55,7 @@ MirrorTree approach is based on co-evolutionary methodology, as MirrorTree assum
 
 \section{Methods}
 \subsection{MirrorTree}
-MirrorTree methodology, developed by Dr. Alfonso Valencia and associates, predicts direct interactions between proteins based on co-evolution of interacting proteins. \cite{Pazos2001}. The work-flow of the MirrorTree is as follows: EXPLAIN
+MirrorTree methodology, developed by Dr. Alfonso Valencia and associates, predicts direct interactions between proteins based on co-evolution of interacting proteins. \cite{Pazos2001}. The work-flow of the MirrorTree is as follows:
 \begin{enumerate}
 \setlength{\itemsep}{1pt}
 	\item Gather \textit{n} sequences to test its interaction.
@@ -104,13 +104,7 @@ Both datasets are useful for assessing known interactions (IntAct) and known non
 
 Multiple sequence alignments of 18S rRNA of species used in previous steps were needed. We downloaded the alignment from the SILVA database\cite{SILVA} (release 123), using the full alignment (but truncated by the aligned region).
 
-
 Interacting and non-interacting sequences where filtered by the species contained in the alignment from SILVA, as well as the local Uniprot database, for increasing the performance of \texttt{mtree}.
-
-
-The output of mtree consists of an HTML with a graph, representing the interactions of the input file, and a tabular file where the query sequence, the target sequence, Pearson's r, Spearman's rho, partial correlation coefficient and type (Int vs NonInt) is printed, for each analysed pair. Then, its label (type) is checked using the precedence of the sequence.
-
-For testing purposes the set of available animals was restricted to \textit{animals} taxon, XXX sequences that interact and YYY sequences that do not interact. The results for our three measures (Pearson's r, Spearman's rho and partial correlation coefficient) are represented in Fig. 1, separating real interactions from IntAct (YES) and false interactions from Negatome (NO).
 
 
 
@@ -178,12 +172,24 @@ In set2, it seems to be possible to properly classify the interactions (despite 
 
 \section{Results}
 \subsection{Mutual information}
+In order to know which coefficient is better for the predictions, mutual information (MI) was performed using R package \textit{FSelector} (version 0.19). 
+MI is used when there are multiple parameters in a model, and for enhancing it, one want to which of the parameters is truly involved with the prediction and which is just confounding the prediction.
+
+The result confirmed the expectations, non of the coefficients was a strong predictor the interactions by using our dataset.
 \subsection{Data}
+
+The set of available animals was restricted to \textit{animals} taxon, 200 sequences that interact and 80 sequences that do not interact. The results for our three measures (Pearson's r, Spearman's rho and partial correlation coefficient) are represented in Fig. 1, separating real interactions from IntAct (YES) and false interactions from Negatome (NO).
+
+As it can be seen in Fig.1, despite there is more interactions that non-interactions, and once it is corrected, the predictive power of the best coefficient (Pearson's r) is better than chance (it succeeds circa 0.60 of the times).
+
+Despite the fact that some authors\cite{Sato2005} reflect that correcting the correlation by partialing out the phylogenetic relationship enhances MirrorTree approach, in this dataset seems that has no effect.
+
+Therefore, despite using different coefficients, the model is not able to make a strong prediction; moreover, it does not reproduce close results of the main article \cite{Pazos2001}. 
+
 \begin{figure*}[t]
 	\includegraphics[width=1.0\textwidth]{glittle3.pdf}
 	\enspace \caption{Relation between correlation coefficients and labelling success}
 \end{figure*}
-
 
 \bibliographystyle{plain}
 \bibliography{project}	
